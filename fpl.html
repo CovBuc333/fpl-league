@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FPL League Dashboard</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#6b6b6b;--card:#f3f3f6;--line:#dcdce2;--acc:#2f6fed;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;max-width:720px;margin-inline:auto}
+h1{font-size:21px;margin:0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:20px 0 8px}
+.sub{color:var(--mut);font-size:13px}
+.ctl{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);display:flex;gap:10px;align-items:center;padding:10px 0;z-index:5}
+button{background:var(--fg);color:var(--bg);border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600}
+input[type=range]{flex:1}
+.gw{font-weight:700;min-width:58px}
+svg.ch{width:100%;height:auto;display:block;background:var(--card);border-radius:12px}
+.ax{fill:var(--mut);font-size:10px}
+.lb{font-size:10.5px;font-weight:600;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.k{background:var(--card);border-radius:12px;padding:10px 12px;min-width:0}
+.k .l{font-size:11.5px;color:var(--mut)}
+.k .v{font-size:19px;font-weight:700}
+.k .n{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tw{overflow-x:auto;background:var(--card);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:13px}
+th{font-size:11px;color:var(--mut);text-align:left;padding:8px 6px;font-weight:600}
+td{padding:7px 6px;border-top:1px solid var(--line);white-space:nowrap}
+tr[data-i]{cursor:pointer}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.bars{display:inline-flex;gap:2px;align-items:flex-end;height:16px;vertical-align:middle;margin-left:6px}
+.bars i{display:block;width:5px;background:var(--acc);border-radius:1px}
+.b{display:inline-block;font-size:11px;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:6px;padding:2px 7px;margin-right:5px}
+.b.u{background:var(--acc);border-color:var(--acc);color:#fff}
+.b small{font-weight:600;font-size:10px;opacity:.9}
+.r{background:var(--card);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.r1{display:flex;align-items:center;gap:6px}
+.rk{font-weight:700;width:18px;color:var(--mut)}
+.nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.pt{font-size:18px;font-weight:700}
+.r2{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut);margin:6px 0 8px 24px}
+.r3{margin-left:24px}
+details{margin-top:20px;background:var(--card);border-radius:12px;padding:10px 12px}
+summary{font-weight:600}
+textarea{width:100%;height:110px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px monospace}
+pre{overflow-x:auto;background:var(--bg);padding:8px;border-radius:8px;font-size:11.5px}
+#err{color:#d33;font-size:13px}
+.back{display:inline-block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--acc);text-decoration:none}
+:root{--acc2:#8b5cf6;--sh:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(0,0,0,.07)}
+body{background:radial-gradient(900px 320px at 50% -90px,color-mix(in srgb,var(--acc) 18%,transparent),transparent) no-repeat,var(--bg)}
+h1{font-size:27px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em}
+h2::before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(var(--acc),var(--acc2))}
+#fcb{margin-left:auto}
+button{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-radius:999px;box-shadow:0 2px 8px color-mix(in srgb,var(--acc) 35%,transparent);transition:transform .1s}
+button:active{transform:scale(.95)}
+.ctl{backdrop-filter:blur(8px);background:color-mix(in srgb,var(--bg) 85%,transparent)}
+.gw{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;text-align:center;font-size:16px}
+input[type=range]{accent-color:var(--acc)}
+svg.ch{background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 75%,var(--bg)));box-shadow:var(--sh);border:1px solid var(--line)}
+svg.ch polyline{filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
+.k,.r,details{box-shadow:var(--sh);border:1px solid var(--line)}
+.k{position:relative;overflow:hidden}
+.k::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.k .v{font-size:22px;font-variant-numeric:tabular-nums}
+.r{border-radius:16px}
+#tb .r:first-child{border-color:#e6b422;background:linear-gradient(135deg,color-mix(in srgb,#e6b422 16%,var(--card)),var(--card))}
+.rk{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bg);color:var(--fg);font-size:12px}
+#tb .r:nth-child(1) .rk{background:#e6b422;color:#3a2a00}
+#tb .r:nth-child(2) .rk{background:#b8c0cc;color:#222}
+#tb .r:nth-child(3) .rk{background:#d08a4c;color:#2d1500}
+.r2,.r3{margin-left:28px}
+.b.u{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent}
+.b:not(.u){border-style:dashed}
+.row{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.row:first-child{border-top:0}
+.tabs{display:flex;gap:4px;margin:12px 0 4px;background:var(--card);padding:4px;border-radius:999px;border:1px solid var(--line)}
+.tabs .tab{flex:1;background:transparent;color:var(--mut);box-shadow:none;border-radius:999px;padding:9px 10px}
+.tabs .tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--acc) 35%,transparent)}
+</style></head><body>
+<a class="back" href="./">← Home</a>
+<h1>Is he come conference league</h1>
+<div class="sub" id="note">Data up to GW9. GW10 is still in progress so it is not included.</div>
+<div class="tabs"><button class="tab on" data-tab="1">This season</button><button class="tab" data-tab="2">Hall of fame</button></div>
+<div id="v1">
+<div class="ctl"><button id="play">Play</button><span class="gw" id="gw"></span><input type="range" id="sl" min="0" max="100" value="0" aria-label="Gameweek"></div>
+
+<h2>League position</h2>
+<svg class="ch" id="rk" role="img" aria-label="League position race chart"></svg>
+<h2 style="display:flex;justify-content:space-between;align-items:center">Total points<button id="fcb" style="font-size:12px;padding:5px 10px;text-transform:none;letter-spacing:0">Forecast finish</button></h2>
+<svg class="ch" id="pt" role="img" aria-label="Total points over gameweeks"></svg>
+<div id="fcl"></div>
+
+<h2>Key metrics</h2>
+<div class="grid" id="kpi"></div>
+<h2>Table</h2>
+<div id="tb"></div>
+<div class="sub" style="margin-top:6px">Chips: WC Wildcard, FH Free Hit, BB Bench Boost, TC Triple Captain. Filled = used (with the GW it was played), outline = still available. The set resets at GW20. Scores are net of hits, and everything follows the selected gameweek.</div>
+
+<h2>Weekly winners &amp; losers</h2>
+<div id="wl"></div>
+<h2>Transfer activity</h2>
+<div id="tr"></div>
+<h2>Squad value</h2>
+<div id="sv"></div>
+<h2>Versus the world</h2>
+<div id="wl2"></div>
+</div>
+<div id="v2" style="display:none"><div id="hf"></div></div>
+
+
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const CH={wildcard:"WC",freehit:"FH",bboost:"BB","3xc":"TC",manager:"AM"};
+let names=[],man=[],tot=[],cost=[],bench=[],chips=[],ranks=[],G=0,N=0,maxTot=0,maxSc=1,t=0,playing=false,prev=0,hl=-1,lastCur=-1;
+const sc=(i,k)=>tot[i][k]-(k?tot[i][k-1]:0);
+const col=i=>`hsl(${Math.round(i*360/N)},68%,52%)`;
+
+function sample(){let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+const n=["Haaland Hopefuls","Salah Gang","Palmer Express","Saka Sauce","Son of a Gunner","Kane Train","Fantasy Fools","Captain Chaos","Bench Boost","Wildcard Wizards"];
+const o={};n.forEach((m,i)=>{const st=52+r()*10;let p=0;const gws=[],chips=[];
+ for(let k=0;k<20;k++){const hit=r()<.2?4:0;p+=Math.max(10,Math.round(st+(r()-.5)*50))-hit;gws.push([p,hit,Math.round(r()*14)])}
+ ["wildcard","bboost","3xc","freehit"].forEach(c=>{if(r()<.55)chips.push([c,2+Math.floor(r()*18)])});
+ o[m]={manager:"Manager "+(i+1),gws,chips}});return o}
+
+function load(o){
+ const ks=Object.keys(o);if(ks.length<2)throw new Error("Need at least 2 teams");
+ const g=Math.min(...ks.map(k=>(o[k].gws||[]).length));if(g<2)throw new Error("Need at least 2 gameweeks");
+ names=ks.map(k=>o[k].manager||k);N=ks.length;G=g;
+ man=ks.map(k=>o[k].manager||"");
+ tot=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[0]));
+ cost=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[1]||0));
+ bench=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[2]||0));
+ chips=ks.map(k=>o[k].chips||[]);
+ trn=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[3]||0));val=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[4]||1000));bnk=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[5]||0));orn=ks.map(k=>o[k].gws.slice(0,g).map(r=>r[6]||0));
+ ranks=[];for(let k=0;k<G;k++){const ord=names.map((_,i)=>i).sort((a,b)=>tot[b][k]-tot[a][k]);const r=[];ord.forEach((i,p)=>r[i]=p);ranks.push(r)}
+ maxTot=Math.ceil(Math.max(...tot.map(a=>a[G-1]))/100)*100;
+ maxSc=1;for(let i=0;i<N;i++)for(let k=0;k<G;k++)maxSc=Math.max(maxSc,sc(i,k));
+ t=0;hl=-1;lastCur=-1;playing=false;$("#play").textContent="Play";$("#sl").max=(G-1)*100;draw()}
+
+function drawRank(gw,f,e){
+ const W=380,L=26,R=104,T=16,rh=Math.min(28,420/N),H=T*2+(N-1)*rh;
+ const x=k=>L+(W-L-R)*k/(G-1),y=r=>T+r*rh;let h="";
+ for(let r=0;r<N;r++)h+=`<text x="${L-8}" y="${y(r)+3.5}" text-anchor="end" class="ax">${r+1}</text><line x1="${L}" x2="${W-R}" y1="${y(r)}" y2="${y(r)}" stroke="var(--line)" stroke-width=".5"/>`;
+ const ord=names.map((_,i)=>i);if(hl>=0){ord.splice(ord.indexOf(hl),1);ord.push(hl)}
+ ord.forEach(i=>{const p=[];for(let k=0;k<=gw;k++)p.push([x(k),y(ranks[k][i])]);
+  let hy=y(ranks[gw][i]);
+  if(f>0){const a=ranks[gw][i],b=ranks[gw+1][i];hy=y(a+(b-a)*e);p.push([x(gw+f),hy])}
+  const hx=p[p.length-1][0],c=col(i);
+  h+=`<g data-i="${i}" opacity="${hl<0||hl===i?1:.2}"><polyline fill="none" stroke="${c}" stroke-width="${hl===i?4:2.2}" stroke-linejoin="round" stroke-linecap="round" points="${p.map(q=>q.join(",")).join(" ")}"/><circle cx="${hx}" cy="${hy}" r="${hl===i?5:3.8}" fill="${c}"/><text class="lb" x="${W-R+8}" y="${hy+3.5}" fill="${c}">${esc(names[i].slice(0,15))}</text></g>`});
+ const s=$("#rk");s.setAttribute("viewBox",`0 0 ${W} ${H}`);s.innerHTML=h}
+
+function drawPts(gw,f){
+ const W=380,L=36,R=10,T=10,B=20,H=230;
+ const x=k=>L+(W-L-R)*k/(G-1),y=v=>T+(H-T-B)*(1-v/maxTot);let h="";
+ for(let j=0;j<=4;j++){const v=maxTot*j/4;h+=`<text x="${L-5}" y="${y(v)+3.5}" text-anchor="end" class="ax">${Math.round(v)}</text><line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width=".5"/>`}
+ const st=Math.ceil(G/7);for(let k=0;k<G;k+=st)h+=`<text x="${x(k)}" y="${H-5}" text-anchor="middle" class="ax">${k+1}</text>`;
+ const ord=names.map((_,i)=>i);if(hl>=0){ord.splice(ord.indexOf(hl),1);ord.push(hl)}
+ ord.forEach(i=>{const p=[];for(let k=0;k<=gw;k++)p.push([x(k),y(tot[i][k])]);
+  let hy=y(tot[i][gw]);
+  if(f>0){const v=tot[i][gw]+(tot[i][gw+1]-tot[i][gw])*f;hy=y(v);p.push([x(gw+f),hy])}
+  const c=col(i);
+  h+=`<g data-i="${i}" opacity="${hl<0||hl===i?1:.2}"><polyline fill="none" stroke="${c}" stroke-width="${hl===i?3.5:1.8}" stroke-linejoin="round" points="${p.map(q=>q.join(",")).join(" ")}"/><circle cx="${p[p.length-1][0]}" cy="${hy}" r="${hl===i?4.5:3}" fill="${c}"/></g>`});
+ const s=$("#pt");s.setAttribute("viewBox",`0 0 ${W} ${H}`);s.innerHTML=h}
+
+let fc=false,fb=5;
+const totAt=(i,p)=>{if(p<=-1)return 0;if(p<0)return tot[i][0]*(p+1);const k=Math.min(Math.floor(p),G-1),fr=p-k;return tot[i][k]+(k+1<G?(tot[i][k+1]-tot[i][k])*fr:0)};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-fb]');if(b){fb=+b.dataset.fb;draw()}});
+$('#fcb').onclick=()=>{fc=!fc;$('#fcb').textContent=fc?'Hide forecast':'Forecast finish';draw()};
+function drawPts2(gw,f){
+ const K=fc?38:G,W=380,L=36,R=10,T=10,B=20,H=230;
+ let top=maxTot;
+ if(fc)for(let i=0;i<N;i++)for(let k=0;k<G;k++)top=Math.max(top,Math.ceil(tot[i][k]/(k+1)*38/100)*100);
+ const x=k=>L+(W-L-R)*k/(K-1),y=v=>T+(H-T-B)*(1-v/top);let h='';
+ for(let j=0;j<=4;j++){const v=top*j/4;h+=`<text x='${L-5}' y='${y(v)+3.5}' text-anchor='end' class='ax'>${Math.round(v)}</text><line x1='${L}' x2='${W-R}' y1='${y(v)}' y2='${y(v)}' stroke='var(--line)' stroke-width='.5'/>`}
+ const st=Math.ceil(K/7);for(let k=0;k<K;k+=st)h+=`<text x='${x(k)}' y='${H-5}' text-anchor='middle' class='ax'>${k+1}</text>`;
+ const ord=names.map((_,i)=>i);if(hl>=0){ord.splice(ord.indexOf(hl),1);ord.push(hl)}
+ const fin=[],rate=[];
+ ord.forEach(i=>{const p=[];for(let k=0;k<=gw;k++)p.push([x(k),y(tot[i][k])]);
+  let v=tot[i][gw];if(f>0)v+=(tot[i][gw+1]-v)*f;
+  const hx=gw+f,hy=y(v),c=col(i);
+  if(f>0)p.push([x(hx),hy]);
+  let ex='';
+  if(fc){const w0=fb?Math.max(hx-fb,-1):-1,rt=(v-totAt(i,w0))/(hx-w0),fv=v+rt*(37-hx);fin[i]=fv;rate[i]=rt;ex=`<line x1='${x(hx)}' y1='${hy}' x2='${x(37)}' y2='${y(fv)}' stroke='${c}' stroke-width='${hl===i?3:1.8}' stroke-dasharray='4 3'/><circle cx='${x(37)}' cy='${y(fv)}' r='3.5' fill='none' stroke='${c}' stroke-width='2'/>`}
+  h+=`<g data-i='${i}' opacity='${hl<0||hl===i?1:.2}'><polyline fill='none' stroke='${c}' stroke-width='${hl===i?3.5:1.8}' stroke-linejoin='round' points='${p.map(q=>q.join(',')).join(' ')}'/><circle cx='${x(hx)}' cy='${hy}' r='${hl===i?4.5:3}' fill='${c}'/>${ex}</g>`});
+ const s=$('#pt');s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.innerHTML=h;
+ const fl=$('#fcl');
+ if(!fc){fl.innerHTML='';return}
+ const o=names.map((_,i)=>i).sort((a,b)=>fin[b]-fin[a]);
+ fl.innerHTML=`<div class='k' style='margin-top:8px'><div class='l' style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px'>Projected GW38 finish based on <button data-fb='5' style='font-size:11px;padding:3px 8px;${fb?'':'background:var(--bg);color:var(--fg);border:1px solid var(--line)'}'>Last 5 GWs</button><button data-fb='0' style='font-size:11px;padding:3px 8px;${fb?'background:var(--bg);color:var(--fg);border:1px solid var(--line)':''}'>Season avg</button></div>`+o.map((i,r)=>`<div class='n' style='display:flex;gap:6px;padding:3px 0'><b style='width:16px'>${r+1}</b><span class='dot' style='background:${col(i)};margin:4px 0 0'></span><span style='flex:1;overflow:hidden;text-overflow:ellipsis'>${esc(names[i])}</span><span style='color:var(--mut);font-size:11.5px'>${rate[i].toFixed(1)}/GW</span><b style='min-width:62px;text-align:right'>${Math.round(fin[i])} pts</b></div>`).join('')+`<div class='l' style='margin-top:6px'>Straight line using each team's ${fb?'last '+fb+' GWs':'season'} average points per GW. Ignores chips, double gameweeks and form swings.</div></div>`}
+var trn,val,bnk,orn;
+function drawWorld(gw,f){
+ const W=380,L=44,R=10,T=10,B=20,H=230,s=$('#wd');
+ const all=orn.flat().filter(v=>v>0);if(!all.length){s.style.display='none';return}
+ s.style.display='';
+ const lo=Math.log10(Math.min(...all)*.85),hi=Math.log10(Math.max(...all)*1.15);
+ const x=k=>L+(W-L-R)*k/(G-1),y=v=>T+(H-T-B)*((Math.log10(v)-lo)/(hi-lo));let h='';
+ [2e5,5e5,1e6,2e6,5e6,1e7].filter(v=>y(v)>=T&&y(v)<=H-B).forEach(v=>{h+=`<text x='${L-5}' y='${y(v)+3.5}' text-anchor='end' class='ax'>${v>=1e6?v/1e6+'m':v/1e3+'k'}</text><line x1='${L}' x2='${W-R}' y1='${y(v)}' y2='${y(v)}' stroke='var(--line)' stroke-width='.5'/>`});
+ const st=Math.ceil(G/7);for(let k=0;k<G;k+=st)h+=`<text x='${x(k)}' y='${H-5}' text-anchor='middle' class='ax'>${k+1}</text>`;
+ h+=`<text x='${L+2}' y='${T+9}' class='ax'>Better</text>`;
+ const ord=names.map((_,i)=>i);if(hl>=0){ord.splice(ord.indexOf(hl),1);ord.push(hl)}
+ ord.forEach(i=>{const p=[];for(let k=0;k<=gw;k++)p.push([x(k),y(orn[i][k])]);
+  let hy=y(orn[i][gw]);
+  if(f>0){const a=Math.log10(orn[i][gw]),b=Math.log10(orn[i][gw+1]);hy=y(Math.pow(10,a+(b-a)*f));p.push([x(gw+f),hy])}
+  const c=col(i);
+  h+=`<g data-i='${i}' opacity='${hl<0||hl===i?1:.2}'><polyline fill='none' stroke='${c}' stroke-width='${hl===i?3.5:1.8}' stroke-linejoin='round' points='${p.map(q=>q.join(',')).join(' ')}'/><circle cx='${p[p.length-1][0]}' cy='${hy}' r='${hl===i?4.5:3}' fill='${c}'/></g>`});
+ s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.innerHTML=h}
+function extra(cur){
+ const idx=[...Array(N).keys()],nm=i=>esc(names[i]),dot=i=>`<span class='dot' style='background:${col(i)};margin:0'></span>`;
+ const w=idx.map(()=>0),l=idx.map(()=>0),hist=[];
+ for(let k=0;k<=cur;k++){let a=0,b=0;idx.forEach(i=>{if(sc(i,k)>sc(a,k))a=i;if(sc(i,k)<sc(b,k))b=i});w[a]++;l[b]++;hist.push([k,a,b])}
+ const tl=idx.slice().sort((a,b)=>w[b]-w[a]||l[a]-l[b]);
+ $('#wl').innerHTML=`<div class='k'>`+tl.map(i=>`<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><span>🏆 ${w[i]}</span><span style='width:46px;text-align:right'>🥄 ${l[i]}</span></div>`).join('')+`<div class='l' style='margin:8px 0 2px'>Tally of gameweeks: (🏆 highest score, 🥄 lowest)</div>`+hist.slice(0,0).map(([k,a,b])=>`<div class='row'><b style='width:38px'>GW${k+1}</b><span class='nm'>🏆 ${esc(names[a].slice(0,11))} ${sc(a,k)}</span><span class='nm'>🥄 ${esc(names[b].slice(0,11))} ${sc(b,k)}</span></div>`).join('')+`</div>`;
+ const sm=(a,i)=>{let s=0;for(let k=0;k<=cur;k++)s+=a[i][k];return s};
+ const to=idx.slice().sort((a,b)=>sm(trn,b)-sm(trn,a));
+ $('#tr').innerHTML=`<div class='k'>`+to.map(i=>`<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><span>🔄 ${sm(trn,i)}</span><span style='width:112px;text-align:right'>${sm(cost,i)/4} hits · −${sm(cost,i)} pts</span></div>`).join('')+`<div class='l' style='margin-top:6px'>Transfers made, hits taken (4 pts each) and points lost. FPL shows no transfers in wildcard weeks.</div></div>`;
+ const vl=idx.slice().sort((a,b)=>val[b][cur]-val[a][cur]);
+ $('#sv').innerHTML=`<div class='k'>`+vl.map(i=>{const d=val[i][cur]-1000;return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>£${(val[i][cur]/10).toFixed(1)}m</b><span style='width:44px;text-align:right;color:${d>0?'#2a9d4a':d<0?'#d33':'var(--mut)'}'>${d>0?'+':d<0?'−':''}${Math.abs(d/10).toFixed(1)}</span><span style='width:78px;text-align:right;color:var(--mut)'>bank £${(bnk[i][cur]/10).toFixed(1)}m</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Squad value, change since the £100.0m start, and money in the bank.</div></div>`;
+ const wk=idx.slice().sort((a,b)=>orn[a][cur]-orn[b][cur]);
+ const f2=n=>n>=1e6?(n/1e6).toFixed(2)+'m':Math.round(n/1e3)+'k';
+ $('#wl2').innerHTML=orn[0][cur]?`<div class='k' style='margin-top:8px'>`+wk.map(i=>{const d=orn[i][Math.max(0,cur-5)]-orn[i][cur];return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>${f2(orn[i][cur])}</b><span style='width:84px;text-align:right;color:${d>0?'#2a9d4a':d<0?'#d33':'var(--mut)'}'>${d>0?'▲':d<0?'▼':''} ${f2(Math.abs(d))}</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Overall FPL rank (lower is better) and movement over the last 5 GWs.</div></div>`:'';
+}
+const PAST={'2020/21':[[2009,2533305],[1401,7003134],[2145,1321125],[1911,3481436]],'2021/22':[[2285,728418],[2204,1175578],[1940,3373740],[2330,536832]],'2022/23':[[2294,1593409],[2430,470558],[2407,605684],[2448,376727]],'2023/24':[[2117,3307767],[2306,985117],[2259,1458547],[2402,355497]],'2024/25':[[2308,1415961],[2401,564257],[2010,5391894],[1886,6656480]],'2025/26':[[2259,396795],[2069,2790418],[2038,3341463],[1882,6231127]]};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));const one=b.dataset.tab==='1';$('#v1').style.display=one?'':'none';$('#v2').style.display=one?'none':'';if(!one){playing=false;$('#play').textContent='Play'}});
+function hof(){
+ const S=Object.keys(PAST),idx=[...Array(N).keys()],nm=i=>esc(names[i]);
+ const f2=n=>n>=1e6?(n/1e6).toFixed(2)+'m':Math.round(n/1e3)+'k';
+ const win=idx.map(()=>0),spo=idx.map(()=>0),tp=idx.map(()=>0);
+ const rows=S.map(s=>{const a=PAST[s],o=idx.slice().sort((x,y)=>a[y][0]-a[x][0]);win[o[0]]++;spo[o[N-1]]++;idx.forEach(i=>tp[i]+=a[i][0]);return [s,o]});
+ const all=[];S.forEach(s=>idx.forEach(i=>all.push({i,s,p:PAST[s][i][0],r:PAST[s][i][1]})));
+ const pick=(arr,key,mx)=>{const v=(mx?Math.max:Math.min)(...arr.map(a=>a[key]));return arr.filter(a=>a[key]===v)};
+ const mv=[];idx.forEach(i=>{for(let k=1;k<S.length;k++)mv.push({i,d:PAST[S[k-1]][i][1]-PAST[S[k]][i][1],r0:PAST[S[k-1]][i][1],r1:PAST[S[k]][i][1],s:S[k]})});
+ const per=idx.map(i=>{const p=S.map(s=>PAST[s][i][0]);return {i,rg:Math.max(...p)-Math.min(...p),t1:S.filter(s=>PAST[s][i][1]<=1e6).length,ar:S.reduce((a,s)=>a+PAST[s][i][1],0)/S.length,tp:tp[i]}});
+ const who=a=>a.map(x=>nm(x.i)).join(' & ');
+ const card=(l,a,d)=>`<div class='k'><div class='l'>${l}</div><div class='v' style='font-size:16px;white-space:normal'>${who(a)}</div><div class='n' style='white-space:normal'>${d}</div></div>`;
+ const bp=pick(all,'p',true),br=pick(all,'r',false),wp=pick(all,'p',false),wr=pick(all,'r',true),ar=pick(per,'ar',false),t1=pick(per,'t1',true),tpp=pick(per,'tp',true),cs=pick(per,'rg',false),rc=pick(per,'rg',true),cb=pick(mv,'d',true),cl=pick(mv,'d',false);
+ const medal=p=>p==0?'🥇':p==1?'🥈':p==2?'🥉':p==N-1?'🥄':p+1;
+ const to=idx.slice().sort((a,b)=>win[b]-win[a]||tp[b]-tp[a]);
+ $('#hf').innerHTML=`<div class='sub' style='margin-top:8px'>Only the seasons all four of you played (${S[0]} to ${S[S.length-1]}). Points and world rank are final results from FPL history.</div><h2>Tally</h2><div class='k'>`+to.map(i=>`<div class='row'><span class='nm'>${nm(i)}</span><span>🏆 ${win[i]}</span><span style='width:46px;text-align:right'>🥄 ${spo[i]}</span><span style='width:78px;text-align:right;color:var(--mut)'>${tp[i]} pts</span></div>`).join('')+`<div class='l' style='margin-top:6px'>Titles (🏆), last places (🥄) and total points over ${S.length} seasons.</div></div><h2>Awards</h2><div class='grid'>`+
+  card('💯 Highest season score',bp,bp[0].p+' pts in '+bp[0].s)+
+  card('🌍 Best world finish',br,'#'+f2(br[0].r)+' in '+br[0].s)+
+  card('🌐 Best average world rank',ar,'Average #'+f2(ar[0].ar))+
+  card('⭐ Most top-1m finishes',t1,t1[0].t1+' of '+S.length+' seasons')+
+  card('📊 Most points overall',tpp,tpp[0].tp+' pts')+
+  card('🧱 Most consistent',cs,'Only '+cs[0].rg+' pts between best and worst')+
+  card('🎢 Rollercoaster',rc,rc[0].rg+' pts between best and worst')+
+  card('🚀 Biggest comeback',cb,'#'+f2(cb[0].r0)+' up to #'+f2(cb[0].r1)+' in '+cb[0].s)+
+  card('📉 Biggest collapse',cl,'#'+f2(cl[0].r0)+' down to #'+f2(cl[0].r1)+' in '+cl[0].s)+
+  card('💀 Worst season',wp,wp[0].p+' pts in '+wp[0].s+' (world #'+f2(wp[0].r)+')')+
+  `</div><h2>Season by season</h2>`+rows.slice().reverse().map(([s,o])=>`<div class='k' style='margin-bottom:8px'><div class='l'>${s} · points · world rank</div>`+o.map((i,p)=>`<div class='row'><span style='width:22px'>${medal(p)}</span><span class='nm'>${nm(i)}</span><b style='width:46px;text-align:right'>${PAST[s][i][0]}</b><span style='width:60px;text-align:right;color:var(--mut)'>${f2(PAST[s][i][1])}</span></div>`).join('')+`</div>`).join('');
+}
+function stats(cur){
+ const idx=[...Array(N).keys()],rk=ranks[cur],by=idx.slice().sort((a,b)=>rk[a]-rk[b]);
+ let top={v:-1,i:0,k:0};idx.forEach(i=>{for(let k=0;k<=cur;k++){const v=sc(i,k);if(v>top.v)top={v,i,k}}});
+ const form=i=>{let s=0;for(let k=Math.max(0,cur-4);k<=cur;k++)s+=sc(i,k);return s};
+ const fm=idx.slice().sort((a,b)=>form(b)-form(a))[0];
+ const cl=i=>ranks[Math.max(0,cur-5)][i]-rk[i];
+ const cb=idx.slice().sort((a,b)=>cl(b)-cl(a))[0];
+ const sum=(a,i)=>{let s=0;for(let k=0;k<=cur;k++)s+=a[i][k];return s};
+ const bn=idx.slice().sort((a,b)=>sum(bench,b)-sum(bench,a))[0];
+ const ht=idx.slice().sort((a,b)=>sum(cost,b)-sum(cost,a))[0];
+ const card=(l,v,n)=>`<div class="k"><div class="l">${l}</div><div class="v">${v}</div><div class="n">${esc(n)}</div></div>`;
+ $("#kpi").innerHTML=
+  card("👑 Leader",tot[by[0]][cur]+" pts",names[by[0]]+" (+"+(tot[by[0]][cur]-tot[by[1]][cur])+" ahead)")+
+  card("🔥 Highest GW score",top.v,names[top.i]+" · GW"+(top.k+1))+
+  card("📈 Best form (last 5)",form(fm)+" pts",names[fm])+
+  card("🚀 Biggest climber",(cl(cb)>0?"▲ ":cl(cb)<0?"▼ ":"")+Math.abs(cl(cb))+" places",names[cb]+" · last 5 GWs")+
+  card("🪑 Most points on bench",sum(bench,bn),names[bn])+
+  card("💸 Most points lost to hits","−"+sum(cost,ht),names[ht]);
+ $("#tb").innerHTML=by.map(i=>{
+  const bars=[];for(let k=Math.max(0,cur-4);k<=cur;k++)bars.push(`<i style="height:${Math.max(2,Math.round(sc(i,k)/maxSc*16))}px"></i>`);
+  const used={};chips[i].forEach(c=>{if(c[1]-1<=cur&&(c[1]<=19)===(cur<19))used[c[0]]=c[1]});const cs=[["wildcard","WC"],["freehit","FH"],["bboost","BB"],["3xc","TC"]].map(([n,l])=>used[n]?`<span class="b u">${l} <small>GW${used[n]}</small></span>`:`<span class="b">${l}</span>`).join("");
+  return `<div class="r" data-i="${i}" style="${hl>=0&&hl!==i?"opacity:.35":""}"><div class="r1"><span class="rk">${rk[i]+1}</span><span class="dot" style="background:${col(i)};margin:0"></span><span class="nm">${esc(names[i])}</span><span class="pt">${tot[i][cur]}</span></div><div class="r2"><span>Last 5: ${form(i)}<span class="bars">${bars.join("")}</span></span><span>Avg ${(tot[i][cur]/(cur+1)).toFixed(1)}</span><span>Hits ${sum(cost,i)?"−"+sum(cost,i):"0"}</span></div><div class="r3">${cs}</div></div>`}).join("")}
+
+function draw(){
+ const gw=Math.max(0,Math.min(Math.floor(t),G-1)),f=gw>=G-1?0:Math.max(0,t-gw),e=f*f*(3-2*f);
+ drawRank(gw,f,e);drawPts2(gw,f);
+ const cur=Math.min(G-1,Math.round(t));$("#gw").textContent="GW "+(cur+1);
+ if(cur!==lastCur||hl!==draw.h){stats(cur);extra(cur);lastCur=cur;draw.h=hl}
+ $("#sl").value=Math.round(t*100)}
+
+function loop(ts){if(!playing)return;t+=Math.max(0,ts-prev)/1000*1.1;prev=ts;
+ if(t>=G-1){t=G-1;playing=false;$("#play").textContent="Replay"}draw();if(playing)requestAnimationFrame(loop)}
+$("#play").onclick=()=>{if(playing){playing=false;$("#play").textContent="Play";return}
+ if(t>=G-1)t=0;playing=true;$("#play").textContent="Pause";prev=performance.now();requestAnimationFrame(loop)};
+$("#sl").oninput=e=>{playing=false;$("#play").textContent="Play";t=e.target.value/100;draw()};
+document.addEventListener("click",e=>{const g=e.target.closest("[data-i]");if(!g)return;const i=+g.dataset.i;hl=hl===i?-1:i;draw()});
+
+const REAL={"the best team":{manager:"Rich Walker",gws:[[53,0,7],[164,0,11],[217,0,17],[310,0,0],[348,0,16],[416,0,11],[486,0,5],[526,0,11],[589,0,14]],chips:[["bboost",4]]},"Temp Name":{manager:"Lee Denny",gws:[[49,0,9],[152,0,0],[201,4,9],[292,0,1],[345,0,0],[415,0,7],[477,0,3],[521,0,0],[585,4,6]],chips:[["3xc",3],["wildcard",4]]},"chris team":{manager:"Chris Harrison",gws:[[43,0,10],[104,0,20],[151,4,5],[233,0,23],[297,0,8],[364,0,10],[436,8,9],[496,0,8],[552,0,21]],chips:[["3xc",7]]},"Madjo Moments":{manager:"Richard Harper",gws:[[66,0,1],[170,0,2],[218,4,6],[288,0,1],[319,4,12],[365,0,17],[435,4,9],[483,0,5],[525,0,21]],chips:[["3xc",3],["wildcard",6]]}};const EXTRA={"the best team":[[0,1000,0,3482299],[0,1001,0,783760],[0,1003,0,801253],[2,1002,13,383187],[1,1006,27,820524],[1,1008,25,826456],[2,1015,48,797632],[1,1020,46,1048336],[1,1017,54,814989]],"Temp Name":[[0,1000,0,4673927],[0,1001,0,1769269],[3,1005,2,2279669],[0,1010,3,1145917],[0,1015,3,962007],[2,1017,4,877260],[0,1022,4,1125362],[1,1027,2,1239252],[3,1024,14,940220]],"chris team":[[0,1000,0,6382778],[0,1000,0,7692095],[3,1001,3,7843570],[0,999,3,6273901],[2,1002,5,4793406],[1,1004,9,4122319],[3,1010,15,3404399],[0,1015,15,2542464],[0,1021,15,2288670]],"Madjo Moments":[[0,1000,0,893714],[1,1002,4,513658],[2,1004,1,797556],[0,1007,1,1389301],[3,1008,1,2797726],[0,1009,3,4045469],[2,1012,2,3465982],[1,1015,38,3341551],[1,1019,25,3773464]]};
+Object.keys(EXTRA).forEach(k=>REAL[k].gws.forEach((r,i)=>{r[3]=EXTRA[k][i][0];r[4]=EXTRA[k][i][1];r[5]=EXTRA[k][i][2];r[6]=EXTRA[k][i][3]}));
+load(REAL);hof();
+const ORDER=['Rich Walker','Lee Denny','Chris Harrison','Richard Harper'];
+fetch('data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
+ const up=d._updated;delete d._updated;
+ const ks=Object.keys(d).sort((a,b)=>ORDER.indexOf(d[a].manager)-ORDER.indexOf(d[b].manager)),o={};
+ ks.forEach(k=>o[k]=d[k]);load(o);
+ $('#note').textContent='Data up to GW'+G+(up?' · updated '+up:'');
+}).catch(()=>{});
+</script></body></html>
