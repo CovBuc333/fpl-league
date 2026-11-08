@@ -82,7 +82,7 @@ svg.ch polyline{filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
 <a class="back" href="./">← Home</a>
 <h1>Is he come conference league</h1>
 <div class="sub" id="note">Data up to GW9. GW10 is still in progress so it is not included.</div>
-<div class="tabs"><button class="tab on" data-tab="1">This season</button><button class="tab" data-tab="2">Hall of fame</button></div>
+<div class="tabs"><button class="tab on" data-tab="1">This season</button><button class="tab" data-tab="2">Hall of fame</button><button class="tab" data-tab="3">Players</button></div>
 <div id="v1">
 <div class="ctl"><button id="play">Play</button><span class="gw" id="gw"></span><input type="range" id="sl" min="0" max="100" value="0" aria-label="Gameweek"></div>
 
@@ -108,6 +108,7 @@ svg.ch polyline{filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
 <div id="wl2"></div>
 </div>
 <div id="v2" style="display:none"><div id="hf"></div></div>
+<div id="v3" style="display:none"><div id="pls"></div></div>
 
 
 
@@ -224,7 +225,26 @@ function extra(cur){
  $('#wl2').innerHTML=orn[0][cur]?`<div class='k' style='margin-top:8px'>`+wk.map(i=>{const d=orn[i][Math.max(0,cur-5)]-orn[i][cur];return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>${f2(orn[i][cur])}</b><span style='width:84px;text-align:right;color:${d>0?'#2a9d4a':d<0?'#d33':'var(--mut)'}'>${d>0?'▲':d<0?'▼':''} ${f2(Math.abs(d))}</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Overall FPL rank (lower is better) and movement over the last 5 GWs.</div></div>`:'';
 }
 const PAST={'2020/21':[[2009,2533305],[1401,7003134],[2145,1321125],[1911,3481436]],'2021/22':[[2285,728418],[2204,1175578],[1940,3373740],[2330,536832]],'2022/23':[[2294,1593409],[2430,470558],[2407,605684],[2448,376727]],'2023/24':[[2117,3307767],[2306,985117],[2259,1458547],[2402,355497]],'2024/25':[[2308,1415961],[2401,564257],[2010,5391894],[1886,6656480]],'2025/26':[[2259,396795],[2069,2790418],[2038,3341463],[1882,6231127]]};
-document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));const one=b.dataset.tab==='1';$('#v1').style.display=one?'':'none';$('#v2').style.display=one?'none':'';if(!one){playing=false;$('#play').textContent='Play'}});
+let plLoaded=false;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));const n=b.dataset.tab;[1,2,3].forEach(i=>{$('#v'+i).style.display=String(i)===n?'':'none'});if(n!=='1'){playing=false;$('#play').textContent='Play'}
+ if(n==='3'&&!plLoaded){plLoaded=true;fetch('player_stats.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(renderPlayers).catch(()=>{$('#pls').innerHTML="<div class='sub' style='margin-top:10px'>Player stats appear after the first nightly update has run.</div>"})}});
+function renderPlayers(d){
+ const nm=m=>`<b style='color:${col(Math.max(0,names.indexOf(m)))}'>${esc(m)}</b>`;
+ const card=(t,b)=>`<div class='k' style='margin-bottom:8px'><div class='l' style='margin-bottom:4px'>${t}</div>${b}</div>`;
+ const row=(a,b,c)=>`<div class='row'><span class='nm'>${a}</span><span style='color:var(--mut)'>${b}</span><b style='min-width:46px;text-align:right'>${c}</b></div>`;
+ const T=Object.values(d.teams).sort((a,b)=>names.indexOf(a.manager)-names.indexOf(b.manager));
+ let h=`<div class='sub' style='margin-top:8px'>Up to GW${d.gw} \u00b7 updated ${esc(d._updated)}. Points are counted as FPL counts them (captain doubled, bench excluded).</div>`;
+ h+=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>row(`${i+1}. ${esc(p.n)}`,p.starts+' starts',p.pts+' pts')).join(''))).join('');
+ h+=`<h2>Captaincy</h2>`+T.map(t=>card(nm(t.manager)+` \u00b7 captain bonus <b>+${t.cap.gain}</b> pts`,t.cap.best?row('\ud83d\udc4d Best pick',`GW${t.cap.best.gw} ${esc(t.cap.best.n)}`,t.cap.best.raw+' pts')+row('\ud83d\udc4e Worst pick',`GW${t.cap.worst.gw} ${esc(t.cap.worst.n)}`,t.cap.worst.raw+' pts'):'')).join('');
+ h+=`<h2>Bench regrets</h2>`+card('Biggest scores left on the bench',d.regrets.map(r=>row(nm(r.mgr),`GW${r.gw} ${esc(r.n)}`,r.raw+' pts')).join(''));
+ const own=d.own,all=own.filter(o=>o.owners.length==T.length),sh=own.filter(o=>o.owners.length>1&&o.owners.length<T.length);
+ const line=(a,b)=>`<div class='row' style='flex-wrap:wrap'><b style='min-width:90px'>${a}</b><span class='nm' style='white-space:normal'>${b}</span></div>`;
+ h+=`<h2>Ownership</h2>`+card('Squads as of GW'+d.gw,line('Everyone owns',all.map(o=>esc(o.n)).join(', ')||'No one')+(sh.length?line('Shared',sh.map(o=>esc(o.n)+' ('+o.owners.map(esc).join(', ')+')').join('; ')):''))+
+  card('Differentials (only one team owns)',T.map(t=>line(nm(t.manager),own.filter(o=>o.owners.length==1&&o.owners[0]==t.manager).map(o=>esc(o.n)).join(', ')||'None')).join(''));
+ const tx=x=>row(nm(x.mgr),`GW${x.gw}: ${esc(x.in)} in, ${esc(x.out)} out`,(x.net>0?'+':x.net<0?'\u2212':'')+Math.abs(x.net));
+ h+=`<h2>Transfers</h2>`+card('Best moves (points gained vs the player sold)',d.best_tx.map(tx).join(''))+card('Worst moves',d.worst_tx.map(tx).join(''));
+ if(d.mismatch_weeks)h+=`<div class='sub'>Note: in ${d.mismatch_weeks} team-weeks the total differs from FPL's official score (usually auto-subs or captain swaps).</div>`;
+ $('#pls').innerHTML=h}
 function hof(){
  const S=Object.keys(PAST),idx=[...Array(N).keys()],nm=i=>esc(names[i]);
  const f2=n=>n>=1e6?(n/1e6).toFixed(2)+'m':Math.round(n/1e3)+'k';
