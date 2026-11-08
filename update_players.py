@@ -19,8 +19,27 @@ def get(path):
     sys.exit(0)
 
 
+def optimal(sq):
+    """Best possible starting XI points from a 15-man squad [(position, points)].
+    FPL rules: 1 GK, 3-5 DEF, 2-5 MID, 1-3 FWD, 11 players in total."""
+    by = {1: [], 2: [], 3: [], 4: []}
+    for pos, pts in sq:
+        by[pos].append(pts)
+    for k in by:
+        by[k].sort(reverse=True)
+    best = 0
+    gk = by[1][0] if by[1] else 0
+    for d in range(3, 6):
+        for m in range(2, 6):
+            f = 10 - d - m
+            if 1 <= f <= 3 and len(by[2]) >= d and len(by[3]) >= m and len(by[4]) >= f:
+                best = max(best, gk + sum(by[2][:d]) + sum(by[3][:m]) + sum(by[4][:f]))
+    return best
+
+
 boot = get("bootstrap-static/")
 players = {e["id"]: e["web_name"] for e in boot["elements"]}
+pos_of = {e["id"]: e["element_type"] for e in boot["elements"]}
 done = max(e["id"] for e in boot["events"] if e["finished"])
 results = get(f"leagues-classic/{LEAGUE}/standings/")["standings"]["results"]
 
@@ -34,7 +53,9 @@ mismatch = 0
 
 for m in results:
     mgr, name, entry = m["player_name"], m["entry_name"], m["entry"]
-    tot, caps, cap_gain = {}, [], 0
+    tot, caps = {}, []
+    cap_total = cap_gain = missed = missed_weeks = 0
+    opt_lost, perfect, worst = 0, 0, {"gw": 0, "lost": 0}
     last = []
     for gw in range(1, done + 1):
         d = get(f"entry/{entry}/event/{gw}/picks/")
@@ -43,37 +64,64 @@ for m in results:
         for s in d.get("automatic_subs", []):  # auto-subs: player out stops counting, player in starts
             mult[s["element_out"]] = 0
             mult[s["element_in"]] = 1
-        gw_pts = 0
+        bboost = d.get("active_chip") == "bboost"
+        gw_pts = xi_raw = 0
+        starters = []
         for p in picks:
             el, mu = p["element"], mult.get(p["element"], 0)
             pts = raw[gw].get(el, 0)
-            t = tot.setdefault(el, {"pts": 0, "starts": 0})
+            t = tot.setdefault(el, {"pts": 0, "starts": 0, "caps": 0, "capPts": 0})
             if mu > 0:
                 t["pts"] += pts * mu
                 t["starts"] += 1
                 gw_pts += pts * mu
-            elif d.get("active_chip") != "bboost" and pts > 0:
+                xi_raw += pts
+                starters.append(el)
+            elif not bboost and pts > 0:
                 regrets.append({"mgr": mgr, "gw": gw, "n": players[el], "raw": pts})
+        # captaincy
         capel = [p["element"] for p in picks if mult.get(p["element"], 0) >= 2]
-        if capel:
-            el = capel[0]
-            caps.append({"gw": gw, "n": players[el], "raw": raw[gw].get(el, 0)})
-            cap_gain += raw[gw].get(el, 0) * (mult[el] - 1)
+        if capel and starters:
+            el, mu = capel[0], mult[capel[0]]
+            cr = raw[gw].get(el, 0)
+            caps.append({"gw": gw, "n": players[el], "raw": cr})
+            cap_total += cr * mu
+            cap_gain += cr * (mu - 1)
+            tot[el]["caps"] += 1
+            tot[el]["capPts"] += cr * (mu - 1)
+            top = max(raw[gw].get(x, 0) for x in starters)
+            if top > cr:
+                missed += (top - cr) * (mu - 1)
+                missed_weeks += 1
+        # optimal XI (bench boost weeks: all 15 count, so nothing to lose)
+        if not bboost:
+            lost = optimal([(pos_of[p["element"]], raw[gw].get(p["element"], 0)) for p in picks]) - xi_raw
+            lost = max(lost, 0)
+            opt_lost += lost
+            if lost == 0:
+                perfect += 1
+            if lost > worst["lost"]:
+                worst = {"gw": gw, "lost": lost}
+        else:
+            perfect += 1
         eh = d.get("entry_history", {})
         if gw_pts not in (eh.get("points"), eh.get("points", 0) + eh.get("event_transfers_cost", 0)):
             mismatch += 1
             print("Check: GW", gw, mgr, "computed", gw_pts, "FPL says", eh.get("points"))
         last = [p["element"] for p in picks]
     squads[mgr] = last
-    top = sorted(tot.items(), key=lambda kv: -kv[1]["pts"])[:5]
+    top5 = sorted(tot.items(), key=lambda kv: -kv[1]["pts"])[:5]
     out_teams[name] = {
         "manager": mgr,
-        "top": [{"n": players[el], "pts": v["pts"], "starts": v["starts"]} for el, v in top],
+        "top": [{"n": players[el], "pts": v["pts"], "starts": v["starts"],
+                 "caps": v["caps"], "capPts": v["capPts"]} for el, v in top5],
         "cap": {
-            "gain": cap_gain,
+            "total": cap_total, "gain": cap_gain, "missed": missed,
+            "missed_weeks": missed_weeks, "weeks": len(caps),
             "best": max(caps, key=lambda c: c["raw"]) if caps else None,
             "worst": min(caps, key=lambda c: c["raw"]) if caps else None,
         },
+        "bench": {"lost": opt_lost, "perfect": perfect, "worst": worst},
     }
     for t in get(f"entry/{entry}/transfers/"):
         if t["event"] > done:

@@ -233,14 +233,16 @@ function renderPlayers(d){
  const card=(t,b)=>`<div class='k' style='margin-bottom:8px'><div class='l' style='margin-bottom:4px'>${t}</div>${b}</div>`;
  const row=(a,b,c)=>`<div class='row'><span class='nm'>${a}</span><span style='color:var(--mut)'>${b}</span><b style='min-width:46px;text-align:right'>${c}</b></div>`;
  const T=Object.values(d.teams).sort((a,b)=>names.indexOf(a.manager)-names.indexOf(b.manager));
+ const rk=n=>['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][n]||(n+1)+'.';
  let h=`<div class='sub' style='margin-top:8px'>Up to GW${d.gw} \u00b7 updated ${esc(d._updated)}. Points are counted as FPL counts them (captain doubled, bench excluded).</div>`;
- h+=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>row(`${i+1}. ${esc(p.n)}`,p.starts+' starts',p.pts+' pts')).join(''))).join('');
- h+=`<h2>Captaincy</h2>`+T.map(t=>card(nm(t.manager)+` \u00b7 captain bonus <b>+${t.cap.gain}</b> pts`,t.cap.best?row('\ud83d\udc4d Best pick',`GW${t.cap.best.gw} ${esc(t.cap.best.n)}`,t.cap.best.raw+' pts')+row('\ud83d\udc4e Worst pick',`GW${t.cap.worst.gw} ${esc(t.cap.worst.n)}`,t.cap.worst.raw+' pts'):'')).join('');
- h+=`<h2>Bench regrets</h2>`+card('Biggest scores left on the bench',d.regrets.map(r=>row(nm(r.mgr),`GW${r.gw} ${esc(r.n)}`,r.raw+' pts')).join(''));
- const own=d.own,all=own.filter(o=>o.owners.length==T.length),sh=own.filter(o=>o.owners.length>1&&o.owners.length<T.length);
- const line=(a,b)=>`<div class='row' style='flex-wrap:wrap'><b style='min-width:90px'>${a}</b><span class='nm' style='white-space:normal'>${b}</span></div>`;
- h+=`<h2>Ownership</h2>`+card('Squads as of GW'+d.gw,line('Everyone owns',all.map(o=>esc(o.n)).join(', ')||'No one')+(sh.length?line('Shared',sh.map(o=>esc(o.n)+' ('+o.owners.map(esc).join(', ')+')').join('; ')):''))+
-  card('Differentials (only one team owns)',T.map(t=>line(nm(t.manager),own.filter(o=>o.owners.length==1&&o.owners[0]==t.manager).map(o=>esc(o.n)).join(', ')||'None')).join(''));
+ h+=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>`<div class='row' style='flex-wrap:wrap'><span class='nm'>${i+1}. ${esc(p.n)}</span><span style='color:var(--mut)'>${p.starts} starts \u00b7 C\u00d7${p.caps}</span><b style='min-width:54px;text-align:right'>${p.pts} pts</b>${p.caps?`<span style='flex-basis:100%;font-size:11.5px;color:var(--mut);padding-left:18px'>${p.capPts} pts (${Math.round(p.capPts/p.pts*100)}%) came from the captain double</span>`:''}</div>`).join(''))).join('')+`<div class='sub'>C\u00d7 = times captained.</div>`;
+ const cs=T.slice().sort((a,b)=>b.cap.total-a.cap.total);
+ h+=`<h2>Captaincy</h2><div class='sub' style='margin-bottom:6px'>Ranked by total captain points (doubled).</div>`+cs.map((t,i)=>card(`${rk(i)} ${nm(t.manager)} \u00b7 <b>${t.cap.total}</b> captain pts (+${t.cap.gain} from the double)`,
+  (t.cap.best?row('\ud83d\udc4d Best pick',`GW${t.cap.best.gw} ${esc(t.cap.best.n)}`,t.cap.best.raw+' pts')+row('\ud83d\udc4e Worst pick',`GW${t.cap.worst.gw} ${esc(t.cap.worst.n)}`,t.cap.worst.raw+' pts'):'')+
+  row('\ud83c\udfaf Missed captain points',`top scorer not captained ${t.cap.missed_weeks} of ${t.cap.weeks} wks`,t.cap.missed?'\u2212'+t.cap.missed:'0'))).join('');
+ const bs=T.slice().sort((a,b)=>a.bench.lost-b.bench.lost);
+ h+=`<h2>Bench regrets</h2>`+card('Biggest scores left on the bench',d.regrets.map(r=>row(nm(r.mgr),`GW${r.gw} ${esc(r.n)}`,r.raw+' pts')).join(''))+
+  card('Points lost by not starting the optimal XI',bs.map((t,i)=>row(`${i+1}. ${nm(t.manager)}`,`${t.bench.perfect} perfect wks${t.bench.worst.lost?' \u00b7 worst GW'+t.bench.worst.gw+' (\u2212'+t.bench.worst.lost+')':''}`,t.bench.lost?'\u2212'+t.bench.lost:'0')).join('')+`<div class='l' style='margin-top:6px'>Best valid XI each week under FPL formation rules, before captaincy. Bench Boost weeks count as perfect.</div>`);
  const tx=x=>row(nm(x.mgr),`GW${x.gw}: ${esc(x.in)} in, ${esc(x.out)} out`,(x.net>0?'+':x.net<0?'\u2212':'')+Math.abs(x.net));
  h+=`<h2>Transfers</h2>`+card('Best moves (points gained vs the player sold)',d.best_tx.map(tx).join(''))+card('Worst moves',d.worst_tx.map(tx).join(''));
  if(d.mismatch_weeks)h+=`<div class='sub'>Note: in ${d.mismatch_weeks} team-weeks the total differs from FPL's official score (usually auto-subs or captain swaps).</div>`;
