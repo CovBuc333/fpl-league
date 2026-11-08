@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Accumulator challenge</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#6b6b6b;--card:#f3f3f6;--line:#dcdce2;--acc:#2f6fed;--acc2:#8b5cf6;--sh:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(0,0,0,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 320px at 50% -90px,color-mix(in srgb,var(--acc) 18%,transparent),transparent) no-repeat,var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;max-width:720px;margin-inline:auto}
+h1{font-size:27px;font-weight:800;letter-spacing:-.02em;margin:0;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:20px 0 8px}
+h2::before{content:'';width:4px;height:14px;border-radius:2px;background:linear-gradient(var(--acc),var(--acc2))}
+.sub{color:var(--mut);font-size:13px}
+.back{display:inline-block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--acc);text-decoration:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0;box-shadow:var(--sh);position:relative;overflow:hidden}
+.k::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.k .l{font-size:11.5px;color:var(--mut)}
+.k .v{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.k .n{font-size:13px}
+.row{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.row:first-child{border-top:0}
+.nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+svg.ch{width:100%;height:auto;display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh)}
+.ax{fill:var(--mut);font-size:10px}
+.g3 .v{font-size:18px}
+.chev{color:var(--mut);transition:transform .15s}
+.hist{display:none}
+.open .hist{display:block}
+.open .chev{transform:rotate(180deg)}
+.pos{color:#2a9d4a}.neg{color:#d33}
+</style></head><body>
+<a class="back" href="./">← Home</a>
+<h1>Accumulator challenge</h1>
+<div class="sub" id="src">Loading…</div>
+
+<h2>Overview</h2>
+<div class="grid" id="kpi"></div>
+<h2>Running profit &amp; loss</h2>
+<svg class="ch" id="pl" role="img" aria-label="Running profit and loss by round"></svg>
+<h2>Players</h2>
+<div id="pl2"></div>
+<h2>Awards</h2>
+<div class="grid" id="aw"></div>
+<h2>Where the picks win</h2>
+<div id="bd"></div>
+<h2>Round by round</h2>
+<div id="rd"></div>
+
+<script>
+const SHEET='https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd8NEu8an7vF7sNRfGf8lj3bp41AfffGl_fsBFJiZgSMIxhSrwa7E_6CiRInFKXWy8j6G3fcDyKg1/pub?gid=0&single=true&output=csv';
+const STAKE=2;
+const PAL=['#3b82f6','#f59e0b','#a855f7','#14b8a6','#ec4899','#64748b'];
+document.addEventListener('click',e=>{const t=e.target.closest('[data-p]');if(t)t.classList.toggle('open')});
+const SNAP=`Name,Bet #,Selected Team,League,Selected Team (Home/Away),Odds,Result,,Bet,Total,,
+Rich W,1,Norwich,EFL Championship,Home,1.91,Lost,,1,-2,,-9.26
+Lee,1,Huddersfield,EFL League One,Home,1.53,Won,,2,-2,,
+Chris,1,Middlesbrough,EFL Championship,Home,1.36,Won,,3,-2,,
+Rich H,1,Mansfield,EFL League One,Home,2,Won,,4,-2,,
+Rich W,2,Everton,Premier League,Home,2.2,Won,,5,-2,,
+Rich H,2,West Ham,Premier League,Home,1.33,Lost,,6,-2,,
+Chris,2,Leicester,Premier League,Home,1.53,Lost,,7,-2,,
+Lee,2,Man City,Premier League,Home,1.44,Won,,8,4.74,,
+Rich W,3,BTTS,Premier League,,1.57,Lost,,,,,
+Rich H,3,BTTS,Premier League,,1.57,Won,,,,,
+Chris,3,Leverkusen,Bundesliga,,1.33,Won,,,,,
+Lee,3,Burnley,EFL Championship,,1.95,Lost,,,,,
+Rich W,4,Aston Villa,Premier League,Home,2.2,Lost,,,,,
+Rich H,4,Chelsea,Premier League,Home,1.18,Lost,,,,,
+Chris,4,Liverpool,Premier League,Home,1.44,Lost,,,,,
+Lee,4,Arsenal,Premier League,Away,1.57,Won,,,,,
+Rich W,5,Everton,Premier League,Home,1.75,Won,,,,,
+Chris,5,Sheff Wed,EFL Championship,Home,2.9,Lost,,,,,
+Rich H,5,Nottm Forest,Premier League,Home,1.6,Lost,,,,,
+Lee,5,Leeds,Premier League,Home,1.67,Lost,,,,,
+Rich W,6,York City,EFL League Two,Home,1.44,Lost,,,,,
+Chris,6,Chelsea,Premier League,Home,1.75,Won,,,,,
+Rich H,6,FC Halifax Town,National League,Home,1.33,Won,,,,,
+Lee,6,Leicester,EFL League One,Home,1.5,Lost,,,,,
+Lee,7,Brighton,Premier League,Home,1.5,Won,,,,,
+Rich W,7,Hull,Premier League,Away,5,Lost,,,,,
+Rich H,7,Wrexham,EFL Championship,Home,1.57,Won,,,,,
+Chris,7,Southampton,EFL Championship,Home,1.36,Lost,,,,,
+Lee,8,Arsenal,Premier League,Home,1.4,Won,,,,,
+Rich W,8,Wolves,EFL Championship,Home,1.33,Won,,,,,
+Rich H,8,Lazio,Serie A,Home,1.44,Won,,,,,
+Chris,8,Atletico Madrid,La Liga,Home,1.25,Won,,,,,`;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+const money=n=>(n<0?'\u2212':'+')+'\u00a3'+Math.abs(n).toFixed(2);
+const cls=n=>n<0?'neg':n>0?'pos':'';
+
+function parseCSV(t){const rows=[];let r=[],f='',q=false;
+ for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c=='"')q=true;else if(c==','){r.push(f);f=''}
+  else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);rows.push(r);r=[];f=''}
+  else f+=c}
+ if(f!==''||r.length){r.push(f);rows.push(r)}return rows}
+
+function build(t){
+ const picks=[],tot={};
+ parseCSV(t).slice(1).forEach(r=>{
+  const n=(r[0]||'').trim(),b=parseInt(r[1]);
+  if(n&&b)picks.push({n,b,team:(r[2]||'').trim(),lg:(r[3]||'').trim(),side:(r[4]||'').trim(),odds:parseFloat(r[5]),res:(r[6]||'').trim().toLowerCase()});
+  const sb=parseInt(r[8]),sv=parseFloat(r[9]);if(sb&&!isNaN(sv))tot[sb]=sv});
+ return {picks,tot}}
+
+function render(t,src){
+ const {picks,tot}=build(t);
+ const names=[...new Set(picks.map(p=>p.n))],col=n=>PAL[names.indexOf(n)%PAL.length];
+ const settled=p=>p.res=='won'||p.res=='lost';
+ const rounds=[...new Set(picks.map(p=>p.b))].sort((a,b)=>a-b).map(b=>{
+  const ps=picks.filter(p=>p.b==b),done=ps.every(settled),won=done&&ps.every(p=>p.res=='won');
+  const comb=ps.reduce((a,p)=>a*p.odds,1);
+  const pnl=!done?null:(tot[b]!==undefined?tot[b]:(won?STAKE*comb-STAKE:-STAKE));
+  return {b,ps,done,won,comb,pnl,lost:ps.filter(p=>p.res=='lost')}});
+ const set=rounds.filter(r=>r.done),sp=picks.filter(settled);
+ let c=0;set.forEach(r=>{c+=r.pnl;r.cum=c});
+ $('#src').textContent=src+' \u00b7 \u00a3'+STAKE+' accumulator each round, one pick per player';
+
+ // overview
+ const wins=set.filter(r=>r.won).length;
+ const bw=sp.filter(p=>p.res=='won').length,tint=c<0?'#d33':'#2a9d4a';
+ const kc=(l,v,n)=>`<div class='k'><div class='l'>${l}</div><div class='v'>${v}</div><div class='n'>${n}</div></div>`;
+ const pc=(x,y)=>y?Math.round(x/y*100)+'% success':'';
+ $('#kpi').innerHTML=
+  `<div class='k' style='grid-column:1/-1;background:linear-gradient(135deg,color-mix(in srgb,${tint} 16%,var(--card)),var(--card))'><div class='l' style='font-weight:700;letter-spacing:.06em'>TOTAL PROFIT / LOSS</div><div class='v ${cls(c)}' style='font-size:46px;line-height:1.1'>${money(c)}</div><div class='n'>on \u00a3${STAKE*set.length} staked over ${set.length} rounds</div></div>`+
+  `<div class='g3' style='grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px'>`+
+  kc('Rounds played',set.length,rounds.length>set.length?(rounds.length-set.length)+' in play':'all settled')+
+  kc('Accumulators won',wins+' of '+set.length,pc(wins,set.length))+
+  kc('Individual bets won',bw+' of '+sp.length,pc(bw,sp.length))+`</div>`;
+
+ // chart
+ const pts=[0,...set.map(r=>r.cum)],lo=Math.min(0,...pts)-1,hi=Math.max(0,...pts)+1;
+ const W=380,H=210,L=46,R=12,T=14,B=24,x=i=>L+(W-L-R)*i/Math.max(1,pts.length-1),y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+ let h='';
+ for(let j=0;j<=4;j++){const v=lo+(hi-lo)*j/4;h+=`<text x='${L-5}' y='${y(v)+3.5}' text-anchor='end' class='ax'>${v<0?'\u2212':''}\u00a3${Math.abs(v).toFixed(0)}</text><line x1='${L}' x2='${W-R}' y1='${y(v)}' y2='${y(v)}' stroke='var(--line)' stroke-width='.5'/>`}
+ h+=`<line x1='${L}' x2='${W-R}' y1='${y(0)}' y2='${y(0)}' stroke='var(--mut)' stroke-width='1' stroke-dasharray='3 3'/>`;
+ h+=`<polyline fill='none' stroke='var(--acc)' stroke-width='2.2' stroke-linejoin='round' points='${pts.map((v,i)=>x(i)+','+y(v)).join(' ')}'/>`;
+ set.forEach((r,i)=>{h+=`<circle cx='${x(i+1)}' cy='${y(r.cum)}' r='4.5' fill='${r.won?'#2a9d4a':'#d33'}'/><text x='${x(i+1)}' y='${H-7}' text-anchor='middle' class='ax'>${r.b}</text>`});
+ const ch=$('#pl');ch.setAttribute('viewBox',`0 0 ${W} ${H}`);ch.innerHTML=h;
+
+ // players
+ const ps=names.map(n=>{
+  const mine=sp.filter(p=>p.n==n),w=mine.filter(p=>p.res=='won').length;
+  let st=0,best=0;picks.filter(p=>p.n==n).sort((a,b)=>a.b-b.b).forEach(p=>{if(p.res=='won'){st++;best=Math.max(best,st)}else if(p.res=='lost')st=0});
+  return {n,k:mine.length,w,l:mine.length-w,avg:mine.reduce((a,p)=>a+p.odds,0)/(mine.length||1),
+   solo:mine.reduce((a,p)=>a+(p.res=='won'?STAKE*(p.odds-1):-STAKE),0),best,
+   sole:set.filter(r=>r.lost.length==1&&r.lost[0].n==n).length}}).sort((a,b)=>b.w-a.w||b.solo-a.solo);
+ const ico=p=>p.res=='won'?'\u2705':p.res=='lost'?'\u274c':'\u23f3';
+ $('#pl2').innerHTML=ps.map(p=>{
+  const hist=picks.filter(x=>x.n==p.n).sort((a,b)=>a.b-b.b);
+  return `<div class='k' data-p style='margin-bottom:8px;cursor:pointer'><div class='row' style='padding-top:0'><b class='nm' style='color:${col(p.n)}'>${esc(p.n)}</b><b>${p.w}/${p.k} won</b><span style='width:40px;text-align:right'>${p.k?Math.round(p.w/p.k*100):0}%</span><span class='chev'>\u25be</span></div><div class='n' style='color:var(--mut);font-size:12.5px;margin-top:4px'>Avg odds ${p.avg.toFixed(2)} \u00b7 Solo P&amp;L <b class='${cls(p.solo)}'>${money(p.solo)}</b> \u00b7 Best streak ${p.best} \u00b7 Sole killer ${p.sole}\u00d7</div><div class='hist'><div class='l' style='margin:8px 0 2px'>Bet history across all rounds</div>`+hist.map(x=>`<div class='row'><span style='width:22px'>${ico(x)}</span><span style='width:28px;color:var(--mut)'>R${x.b}</span><span class='nm'>${esc(x.team)} <span style='color:var(--mut)'>\u00b7 ${esc(x.lg)}</span></span><b>${x.odds.toFixed(2)}</b></div>`).join('')+`</div></div>`}).join('')+`<div class='sub'>Tap a player to see their bet history. Solo P&amp;L = if each person had staked \u00a3${STAKE} on their own picks alone.</div>`;
+
+ // awards
+ const top=(arr,f,mx)=>{if(!arr.length)return [];const v=(mx?Math.max:Math.min)(...arr.map(f));return arr.filter(a=>f(a)==v)};
+ const who=a=>a.map(x=>esc(x.n)).join(' & ')||'\u2014';
+ const pk=p=>esc(p.n)+': '+esc(p.team)+' @'+p.odds.toFixed(2);
+ const won=sp.filter(p=>p.res=='won'),lost=sp.filter(p=>p.res=='lost');
+ const wl=top(ps,p=>p.l,true),sk=top(ps,p=>p.sole,true),hs=top(ps,p=>p.best,true);
+ const ls=top(won,p=>p.odds,true)[0],bb=top(lost,p=>p.odds,false)[0],lm=top(lost,p=>p.odds,true)[0];
+ const ac=(l,v,n)=>`<div class='k'><div class='l'>${l}</div><div class='v' style='font-size:16px;white-space:normal'>${v}</div><div class='n' style='white-space:normal'>${n}</div></div>`;
+ $('#aw').innerHTML=
+  ac('\ud83d\udd17 Weakest link',who(wl),wl[0]?wl[0].l+' losing picks':'')+
+  ac('\ud83d\udca3 Sole killer',sk[0]&&sk[0].sole?who(sk):'None yet',sk[0]&&sk[0].sole?'Sank a round alone '+sk[0].sole+'\u00d7':'')+
+  ac('\ud83d\udd25 Hot streak',who(hs),hs[0]?hs[0].best+' winning picks in a row':'')+
+  ac('\ud83c\udfaf Longest shot landed',ls?pk(ls):'\u2014','Round '+(ls?ls.b:''))+
+  ac('\ud83e\udd21 Biggest bottle',bb?pk(bb):'\u2014','Shortest odds to lose, round '+(bb?bb.b:''))+
+  ac('\ud83d\ude80 Longest shot missed',lm?pk(lm):'\u2014','Round '+(lm?lm.b:''));
+
+ // breakdowns
+ const grp=(title,fn)=>{const m={};sp.forEach(p=>{const k=fn(p);(m[k]=m[k]||{k:0,w:0});m[k].k++;if(p.res=='won')m[k].w++});
+  return `<div class='k' style='margin-bottom:8px'><div class='l' style='margin-bottom:4px'>${title}</div>`+Object.entries(m).sort((a,b)=>b[1].k-a[1].k).map(([k,v])=>`<div class='row'><span class='nm'>${esc(k)}</span><span>${v.w}/${v.k}</span><span style='width:44px;text-align:right'><b>${Math.round(v.w/v.k*100)}%</b></span></div>`).join('')+`</div>`};
+ $('#bd').innerHTML=grp('By league',p=>p.lg||'Other')+grp('Home or away',p=>p.side||'No side (e.g. BTTS)')+grp('By odds',p=>p.odds<1.5?'Short (under 1.50)':p.odds<2?'Mid (1.50 to 1.99)':'Longer (2.00+)');
+
+ // rounds
+ $('#rd').innerHTML=rounds.slice().reverse().map(r=>`<div class='k' style='margin-bottom:8px'><div class='l' style='margin-bottom:4px'>Round ${r.b} \u00b7 ${r.done?(r.won?'<b class="pos">WON</b>':'<b class="neg">Lost</b>'):'in play'} \u00b7 combined odds ${r.comb.toFixed(2)}${r.done?' \u00b7 <b class="'+cls(r.pnl)+'">'+money(r.pnl)+'</b>':''}</div>`+r.ps.map(p=>`<div class='row'><span style='width:22px'>${p.res=='won'?'\u2705':p.res=='lost'?'\u274c':'\u23f3'}</span><span class='nm'><b style='color:${col(p.n)}'>${esc(p.n)}</b> \u2013 ${esc(p.team)}</span><b>${p.odds.toFixed(2)}</b></div>`).join('')+`</div>`).join('');
+}
+
+const ok=r=>{if(!r.ok)throw 0;return r.text()};
+const check=t=>{if(!t.includes('Selected Team'))throw 0;return t};
+fetch(SHEET).then(ok).then(check).then(t=>render(t,'Live from the Google Sheet'))
+ .catch(()=>fetch('accumulator.csv',{cache:'no-store'}).then(ok).then(check).then(t=>render(t,'Saved copy of the Google Sheet')))
+ .catch(()=>render(SNAP,'Built-in snapshot'));
+</script></body></html>

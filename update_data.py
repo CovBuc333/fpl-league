@@ -2,6 +2,19 @@ import json, sys, time, urllib.request
 
 LEAGUE = 1030280  # your classic league ID
 BASE = "https://fantasy.premierleague.com/api/"
+SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd8NEu8an7vF7sNRfGf8lj3bp41AfffGl_fsBFJiZgSMIxhSrwa7E_6CiRInFKXWy8j6G3fcDyKg1/pub?gid=0&single=true&output=csv"
+
+# Save a copy of the accumulator Google Sheet (the page falls back to this copy)
+try:
+    req = urllib.request.Request(SHEET, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        text = r.read().decode("utf-8")
+    if "Selected Team" in text:
+        with open("accumulator.csv", "w", encoding="utf-8") as f:
+            f.write(text)
+        print("Saved accumulator.csv")
+except Exception as e:
+    print("Could not fetch the accumulator sheet:", e)
 
 
 def get(path):
@@ -13,7 +26,8 @@ def get(path):
         except Exception as e:
             print("retrying", path, e)
             time.sleep(5)
-    sys.exit("FPL API unavailable, keeping the existing data.json")
+    print("FPL API unavailable, keeping the existing data.json")
+    sys.exit(0)
 
 
 events = get("bootstrap-static/")["events"]
