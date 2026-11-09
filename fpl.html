@@ -293,26 +293,6 @@ function renderPlayers(d){
   card('\ud83d\udca9 Top 5 worst transfers',worst.map(mv).join('')+`<div class='l' style='margin-top:6px'>Same measure, lowest first.</div>`)+
   `<div class='sub'>Next GW is the first week the new player is in the squad; next 3 GWs is that week plus the two after. Wildcard and Free Hit moves are left out.</div>`;
 
- const cur0=names.map((_,i)=>tot[i]?tot[i][G-1]:0);
- const posOf=(i,v)=>1+cur0.filter((c,j)=>j!==i&&c>v).length;
- const ord=n=>n+(['th','st','nd','rd'][(n%100>10&&n%100<14)?0:(n%10<4?n%10:0)]);
- let needNight=false;
- const wiCards=T.map(t=>{
-  const i=names.indexOf(t.manager);if(i<0)return '';
-  const base=cur0[i],p0=posOf(i,base);let c=[];
-  if(t.wi)t.wi.filter(w=>w.gw<=G).forEach(w=>c.push(w.t==='cap'?{gw:w.gw,d:w.d,k:'\ud83d\udc51',x:`Captain ${esc(w.b)} (${w.br}) instead of ${esc(w.a)} (${w.ar})`}:{gw:w.gw,d:w.d,k:'\ud83e\ude91',x:`Start ${esc(w.n)} (${w.r}) and field the best XI`}));
-  else needNight=true;
-  TX.filter(x=>x.mgr===t.manager&&x.gw<=G).forEach(x=>{const w3=x.a3!==null,d=w3?x.b3-x.a3:x.b1-x.a1;if(d>0)c.push({gw:x.gw,d,k:'\ud83d\udd04',x:`Keep ${esc(x.out)} instead of buying ${esc(x.in)} (${w3?x.b3+' v '+x.a3+' over 3 GWs':x.b1+' v '+x.a1+' next GW'})`})});
-  c=c.filter(z=>z.d>0).sort((a,b)=>b.d-a.d||b.gw-a.gw);
-  c.forEach(z=>{z.np=posOf(i,base+z.d)});
-  const ch=c.filter(z=>z.np<p0),rest=c.filter(z=>z.np>=p0);
-  const pick=ch.slice(0,3).concat(rest.slice(0,Math.max(0,3-ch.length)));
-  const sum=pick.reduce((a,z)=>a+z.d,0);
-  const others=Math.max(...cur0.filter((_,j)=>j!==i));
-  const rows=pick.map(z=>`<div class='row' style='flex-wrap:wrap'><span class='nm' style='white-space:normal'>${z.k} GW${z.gw} \u00b7 ${z.x}</span><b style='min-width:44px;text-align:right'>+${z.d}</b><span style='flex-basis:100%;font-size:11.5px;color:var(--mut);padding-left:18px'>${z.np<p0?`\ud83d\udcc8 ${ord(p0)} \u2192 ${ord(z.np)}`:`stays ${ord(p0)}`}</span></div>`).join('')||`<div class='row'><span class='nm' style='color:var(--mut)'>Nothing to flag yet</span></div>`;
-  const comb=pick.length>1?`<div class='l' style='margin-top:4px'>${pick.length===3?'All three':'All of these'} together: +${sum} pts \u2192 ${p0===1?`lead over the chasing pack grows from ${base-others} to ${base+sum-others} pts`:`finish ${ord(posOf(i,base+sum))} instead of ${ord(p0)}`}</div>`:'';
-  return card(`${nm(t.manager)} \u00b7 ${ord(p0)} now \u00b7 ${base} pts`,rows+comb)}).join('');
- h+=`<h2>What-if-alyser</h2><div class='sub' style='margin-bottom:6px'>The biggest decisions that, done differently, would have moved each team up the table: captain picks, benching the wrong player, and transfers that backfired. Each is tested on its own against everyone else's actual points.</div>`+wiCards+`<div class='sub'>Points are as FPL counts them. Transfer what-ifs compare the two players over the next 3 GWs (or next GW if that is all there is) and ignore any hit taken. Captain what-ifs swap in the week's top-scoring starter; best-XI what-ifs use the best legal XI before captaincy. Teams that are already first show how far their lead would have grown.${needNight?' Captaincy and bench what-ifs appear after the next nightly update.':''}</div>`;
  if(d.mismatch_weeks)h+=`<div class='sub'>Note: in ${d.mismatch_weeks} team-weeks the total differs from FPL's official score (usually auto-subs or captain swaps).</div>`;
  $('#pls').innerHTML=h}
 function hof(){
