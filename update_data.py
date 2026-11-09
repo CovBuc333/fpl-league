@@ -31,7 +31,7 @@ def get(path):
 
 
 events = get("bootstrap-static/")["events"]
-done = max(e["id"] for e in events if e["finished"])  # last finished gameweek
+done = max(e["id"] for e in events if e["finished"] or e.get("data_checked"))  # last finished gameweek
 results = get(f"leagues-classic/{LEAGUE}/standings/")["standings"]["results"]
 
 out = {}

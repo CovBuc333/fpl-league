@@ -40,7 +40,7 @@ def optimal(sq):
 boot = get("bootstrap-static/")
 players = {e["id"]: e["web_name"] for e in boot["elements"]}
 pos_of = {e["id"]: e["element_type"] for e in boot["elements"]}
-done = max(e["id"] for e in boot["events"] if e["finished"])
+done = max(e["id"] for e in boot["events"] if e["finished"] or e.get("data_checked"))
 results = get(f"leagues-classic/{LEAGUE}/standings/")["standings"]["results"]
 
 # Points every player scored in every finished gameweek
