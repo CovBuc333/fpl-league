@@ -58,6 +58,7 @@ for m in results:
     opt_lost, perfect, worst = 0, 0, {"gw": 0, "lost": 0}
     chip_by_gw, cap_by_gw, pts_by_gw, picks_by_gw = {}, {}, {}, {}
     last = []
+    wi_cap, wi_xi = [], []  # what-if candidates: captain swaps and best-XI weeks
     for gw in range(1, done + 1):
         d = get(f"entry/{entry}/event/{gw}/picks/")
         picks = d["picks"]
@@ -88,10 +89,13 @@ for m in results:
             caps.append({"gw": gw, "n": players[el], "raw": cr})
             cap_total += cr * mu
             tot[el]["caps"] += 1
-            top = max(raw[gw].get(x, 0) for x in starters)
+            topel = max(starters, key=lambda x: raw[gw].get(x, 0))
+            top = raw[gw].get(topel, 0)
             if top > cr:
                 missed += (top - cr) * (mu - 1)
                 missed_weeks += 1
+                wi_cap.append({"t": "cap", "gw": gw, "d": (top - cr) * (mu - 1),
+                               "a": players[el], "ar": cr, "b": players[topel], "br": top})
         chip_by_gw[gw] = d.get("active_chip")
         picks_by_gw[gw] = picks
         pts_by_gw[gw] = gw_pts
@@ -101,6 +105,11 @@ for m in results:
         if not bboost:
             lost = optimal([(pos_of[p["element"]], raw[gw].get(p["element"], 0)) for p in picks]) - xi_raw
             lost = max(lost, 0)
+            if lost > 0:
+                bench_els = [p["element"] for p in picks if p["element"] not in starters]
+                if bench_els:
+                    bn = max(bench_els, key=lambda e: raw[gw].get(e, 0))
+                    wi_xi.append({"t": "xi", "gw": gw, "d": lost, "n": players[bn], "r": raw[gw].get(bn, 0)})
             opt_lost += lost
             if lost == 0:
                 perfect += 1
@@ -149,6 +158,8 @@ for m in results:
         },
         "bench": {"lost": opt_lost, "perfect": perfect, "worst": worst},
         "chips": chips,
+        # what-if candidates (points that a different decision would have added); the page turns these into league positions
+        "wi": sorted(wi_cap, key=lambda w: -w["d"])[:8] + sorted(wi_xi, key=lambda w: -w["d"])[:8],
     }
 
     # Transfers: did the player bought outscore the player sold?
