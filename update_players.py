@@ -54,8 +54,9 @@ mismatch = 0
 for m in results:
     mgr, name, entry = m["player_name"], m["entry_name"], m["entry"]
     tot, caps = {}, []
-    cap_total = cap_gain = missed = missed_weeks = 0
+    cap_total = missed = missed_weeks = 0
     opt_lost, perfect, worst = 0, 0, {"gw": 0, "lost": 0}
+    chip_by_gw, cap_by_gw, pts_by_gw, picks_by_gw = {}, {}, {}, {}
     last = []
     for gw in range(1, done + 1):
         d = get(f"entry/{entry}/event/{gw}/picks/")
@@ -70,7 +71,7 @@ for m in results:
         for p in picks:
             el, mu = p["element"], mult.get(p["element"], 0)
             pts = raw[gw].get(el, 0)
-            t = tot.setdefault(el, {"pts": 0, "starts": 0, "caps": 0, "capPts": 0})
+            t = tot.setdefault(el, {"pts": 0, "starts": 0, "caps": 0})
             if mu > 0:
                 t["pts"] += pts * mu
                 t["starts"] += 1
@@ -86,13 +87,16 @@ for m in results:
             cr = raw[gw].get(el, 0)
             caps.append({"gw": gw, "n": players[el], "raw": cr})
             cap_total += cr * mu
-            cap_gain += cr * (mu - 1)
             tot[el]["caps"] += 1
-            tot[el]["capPts"] += cr * (mu - 1)
             top = max(raw[gw].get(x, 0) for x in starters)
             if top > cr:
                 missed += (top - cr) * (mu - 1)
                 missed_weeks += 1
+        chip_by_gw[gw] = d.get("active_chip")
+        picks_by_gw[gw] = picks
+        pts_by_gw[gw] = gw_pts
+        if capel and starters:
+            cap_by_gw[gw] = (capel[0], mult[capel[0]])
         # optimal XI (bench boost weeks: all 15 count, so nothing to lose)
         if not bboost:
             lost = optimal([(pos_of[p["element"]], raw[gw].get(p["element"], 0)) for p in picks]) - xi_raw
@@ -111,25 +115,59 @@ for m in results:
         last = [p["element"] for p in picks]
     squads[mgr] = last
     top5 = sorted(tot.items(), key=lambda kv: -kv[1]["pts"])[:5]
+
+    # Chip efficiency (wildcard excluded): points gained from each chip
+    chips = []
+    for gw, chip in chip_by_gw.items():
+        if chip == "3xc" and gw in cap_by_gw:
+            el, _ = cap_by_gw[gw]
+            g = raw[gw].get(el, 0)  # the extra multiple on top of a normal captain
+            chips.append({"chip": "3xc", "gw": gw, "gain": g, "note": f"{players[el]} scored {g}"})
+        elif chip == "bboost":
+            g = sum(raw[gw].get(p["element"], 0) for p in picks_by_gw[gw] if p["position"] >= 12)
+            chips.append({"chip": "bboost", "gw": gw, "gain": g, "note": f"bench scored {g}"})
+        elif chip == "freehit":
+            prev = picks_by_gw.get(gw - 1)
+            if prev:
+                cf = sum(raw[gw].get(p["element"], 0) * (2 if p["multiplier"] >= 2 else 1)
+                         for p in prev if p["position"] <= 11)
+                chips.append({"chip": "freehit", "gw": gw, "gain": pts_by_gw[gw] - cf,
+                              "note": f"{pts_by_gw[gw]} pts vs {cf} with the previous team"})
+            else:
+                chips.append({"chip": "freehit", "gw": gw, "gain": 0, "note": "no previous team to compare"})
+    chips.sort(key=lambda c: c["gw"])
+
     out_teams[name] = {
         "manager": mgr,
-        "top": [{"n": players[el], "pts": v["pts"], "starts": v["starts"],
-                 "caps": v["caps"], "capPts": v["capPts"]} for el, v in top5],
+        "top": [{"n": players[el], "pts": v["pts"], "starts": v["starts"], "caps": v["caps"]}
+                for el, v in top5],
         "cap": {
-            "total": cap_total, "gain": cap_gain, "missed": missed,
+            "total": cap_total, "missed": missed,
             "missed_weeks": missed_weeks, "weeks": len(caps),
             "best": max(caps, key=lambda c: c["raw"]) if caps else None,
             "worst": min(caps, key=lambda c: c["raw"]) if caps else None,
         },
         "bench": {"lost": opt_lost, "perfect": perfect, "worst": worst},
+        "chips": chips,
     }
+
+    # Transfers: did the player bought outscore the player sold?
+    skip = {g for g, c in chip_by_gw.items() if c in ("wildcard", "freehit")}
     for t in get(f"entry/{entry}/transfers/"):
-        if t["event"] > done:
+        e = t["event"]
+        if e > done or e in skip:
             continue
-        span = range(t["event"], done + 1)
-        net = sum(raw[g].get(t["element_in"], 0) for g in span) - sum(raw[g].get(t["element_out"], 0) for g in span)
-        transfers.append({"mgr": mgr, "gw": t["event"], "in": players[t["element_in"]],
-                          "out": players[t["element_out"]], "net": net})
+
+        def win(el, n):
+            return sum(raw[g].get(el, 0) for g in range(e, e + n))
+
+        full = e + 2 <= done
+        transfers.append({
+            "mgr": mgr, "gw": e, "in": players[t["element_in"]], "out": players[t["element_out"]],
+            "a1": win(t["element_in"], 1), "b1": win(t["element_out"], 1),
+            "a3": win(t["element_in"], 3) if full else None,
+            "b3": win(t["element_out"], 3) if full else None,
+        })
 
 owners = {}
 for mgr, sq in squads.items():
@@ -138,7 +176,7 @@ for mgr, sq in squads.items():
 own = sorted(({"n": players[el], "owners": o} for el, o in owners.items()),
              key=lambda x: (-len(x["owners"]), x["n"]))
 
-transfers.sort(key=lambda x: -x["net"])
+transfers.sort(key=lambda x: (-x["gw"], x["mgr"]))
 out = {
     "_updated": time.strftime("%d %b %Y"),
     "gw": done,
@@ -146,8 +184,7 @@ out = {
     "teams": out_teams,
     "regrets": sorted(regrets, key=lambda r: -r["raw"])[:6],
     "own": own,
-    "best_tx": transfers[:3],
-    "worst_tx": transfers[::-1][:3],
+    "tx": transfers,
 }
 with open("player_stats.json", "w") as f:
     json.dump(out, f)

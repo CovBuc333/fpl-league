@@ -78,11 +78,22 @@ svg.ch polyline{filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
 .tabs{display:flex;gap:4px;margin:12px 0 4px;background:var(--card);padding:4px;border-radius:999px;border:1px solid var(--line)}
 .tabs .tab{flex:1;background:transparent;color:var(--mut);box-shadow:none;border-radius:999px;padding:9px 10px}
 .tabs .tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--acc) 35%,transparent)}
+.nav{display:flex;align-items:flex-end;gap:6px;margin:14px 0 8px}
+.nav .grp{display:flex;flex-direction:column;gap:5px}
+.nav .grp.right{margin-left:auto;padding-left:8px;border-left:1px solid var(--line)}
+.nav .gl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:0 2px}
+.nav .row2{display:flex;gap:6px}
+.nav button.tab{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 3px 8px rgba(0,0,0,.06);padding:9px 10px;margin:0;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .1s}
+.nav button.tab:active{transform:scale(.96)}
+.nav button.tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent;box-shadow:0 3px 10px color-mix(in srgb,var(--acc) 40%,transparent)}
 </style></head><body>
 <a class="back" href="./">← Home</a>
 <h1>Is he come conference league</h1>
 <div class="sub" id="note">Data up to GW9. GW10 is still in progress so it is not included.</div>
-<div class="tabs"><button class="tab on" data-tab="1">This season</button><button class="tab" data-tab="2">Hall of fame</button><button class="tab" data-tab="3">Players</button></div>
+<nav class="nav">
+<div class="grp"><div class="gl">This season</div><div class="row2"><button class="tab on" data-sub="1">League stats</button><button class="tab" data-sub="3">Analytics</button></div></div>
+<div class="grp right"><div class="gl">Past seasons</div><div class="row2"><button class="tab" data-top="h">Hall of fame</button></div></div>
+</nav>
 <div id="v1">
 <div class="ctl"><button id="play">Play</button><span class="gw" id="gw"></span><input type="range" id="sl" min="0" max="100" value="0" aria-label="Gameweek"></div>
 
@@ -100,6 +111,8 @@ svg.ch polyline{filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
 
 <h2>Weekly winners &amp; losers</h2>
 <div id="wl"></div>
+<h2>Chip efficiency</h2>
+<div id="ce"></div>
 <h2>Transfer activity</h2>
 <div id="tr"></div>
 <h2>Squad value</h2>
@@ -210,6 +223,7 @@ function drawWorld(gw,f){
   h+=`<g data-i='${i}' opacity='${hl<0||hl===i?1:.2}'><polyline fill='none' stroke='${c}' stroke-width='${hl===i?3.5:1.8}' stroke-linejoin='round' points='${p.map(q=>q.join(',')).join(' ')}'/><circle cx='${p[p.length-1][0]}' cy='${hy}' r='${hl===i?4.5:3}' fill='${c}'/></g>`});
  s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.innerHTML=h}
 function extra(cur){
+ if(PS)renderChips(PS,cur);
  const idx=[...Array(N).keys()],nm=i=>esc(names[i]),dot=i=>`<span class='dot' style='background:${col(i)};margin:0'></span>`;
  const w=idx.map(()=>0),l=idx.map(()=>0),hist=[];
  for(let k=0;k<=cur;k++){let a=0,b=0;idx.forEach(i=>{if(sc(i,k)>sc(a,k))a=i;if(sc(i,k)<sc(b,k))b=i});w[a]++;l[b]++;hist.push([k,a,b])}
@@ -225,26 +239,50 @@ function extra(cur){
  $('#wl2').innerHTML=orn[0][cur]?`<div class='k' style='margin-top:8px'>`+wk.map(i=>{const d=orn[i][Math.max(0,cur-5)]-orn[i][cur];return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>${f2(orn[i][cur])}</b><span style='width:84px;text-align:right;color:${d>0?'#2a9d4a':d<0?'#d33':'var(--mut)'}'>${d>0?'▲':d<0?'▼':''} ${f2(Math.abs(d))}</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Overall FPL rank (lower is better) and movement over the last 5 GWs.</div></div>`:'';
 }
 const PAST={'2020/21':[[2009,2533305],[1401,7003134],[2145,1321125],[1911,3481436]],'2021/22':[[2285,728418],[2204,1175578],[1940,3373740],[2330,536832]],'2022/23':[[2294,1593409],[2430,470558],[2407,605684],[2448,376727]],'2023/24':[[2117,3307767],[2306,985117],[2259,1458547],[2402,355497]],'2024/25':[[2308,1415961],[2401,564257],[2010,5391894],[1886,6656480]],'2025/26':[[2259,396795],[2069,2790418],[2038,3341463],[1882,6231127]]};
-let plLoaded=false;
-document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));const n=b.dataset.tab;[1,2,3].forEach(i=>{$('#v'+i).style.display=String(i)===n?'':'none'});if(n!=='1'){playing=false;$('#play').textContent='Play'}
- if(n==='3'&&!plLoaded){plLoaded=true;fetch('player_stats.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(renderPlayers).catch(()=>{$('#pls').innerHTML="<div class='sub' style='margin-top:10px'>Player stats appear after the first nightly update has run.</div>"})}});
+var PS=null;
+let topT='s',subT='1';
+const RK=n=>['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][n]||(n+1)+'.';
+function showTab(){
+ const v=topT==='h'?'2':subT;
+ [1,2,3].forEach(i=>{$('#v'+i).style.display=String(i)===v?'':'none'});
+ document.querySelectorAll('[data-top]').forEach(x=>x.classList.toggle('on',x.dataset.top===topT));
+ document.querySelectorAll('[data-sub]').forEach(x=>x.classList.toggle('on',topT==='s'&&x.dataset.sub===subT));
+ if(v!=='1'){playing=false;$('#play').textContent='Play'}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-top],[data-sub]');if(!b)return;if(b.dataset.top)topT=b.dataset.top;if(b.dataset.sub){topT='s';subT=b.dataset.sub}showTab()});
+function renderChips(d,cur){
+ const T=Object.values(d.teams).sort((a,b)=>names.indexOf(a.manager)-names.indexOf(b.manager));
+ const nm=m=>`<b style='color:${col(Math.max(0,names.indexOf(m)))}'>${esc(m)}</b>`;
+ const CN={'3xc':'Triple Captain','bboost':'Bench Boost','freehit':'Free Hit'},AB={'3xc':'TC','bboost':'BB','freehit':'FH'};
+ const used=t=>(t.chips||[]).filter(c=>c.gw<=cur+1);
+ const tot=t=>used(t).reduce((a,c)=>a+c.gain,0);
+ const first=cur+1<=19;
+ const left=t=>Object.keys(CN).filter(c=>!used(t).some(u=>u.chip===c&&(u.gw<=19)===first));
+ const sg=n=>(n>0?'+':n<0?'\u2212':'')+Math.abs(n);
+ $('#ce').innerHTML=`<div class='sub' style='margin-bottom:6px'>Points gained from Triple Captain (the extra captain multiple), Bench Boost (bench points) and Free Hit (against the previous week's team). Wildcard is excluded.</div>`+
+  T.slice().sort((a,b)=>tot(b)-tot(a)).map((t,i)=>`<div class='k' style='margin-bottom:8px'><div class='l' style='margin-bottom:4px'>${RK(i)} ${nm(t.manager)} \u00b7 <b>${sg(tot(t))}</b> pts from chips</div>`+
+   (used(t).map(c=>`<div class='row'><span class='nm'>${CN[c.chip]} \u00b7 GW${c.gw}</span><span class='nm' style='color:var(--mut);font-size:12px'>${esc(c.note)}</span><b style='min-width:40px;text-align:right'>${sg(c.gain)}</b></div>`).join('')||`<div class='row'><span class='nm' style='color:var(--mut)'>No chips played yet</span></div>`)+
+   (left(t).length?`<div class='l' style='margin-top:4px'>Still to play: ${left(t).map(c=>AB[c]).join(', ')}</div>`:'')+`</div>`).join('')}
 function renderPlayers(d){
  const nm=m=>`<b style='color:${col(Math.max(0,names.indexOf(m)))}'>${esc(m)}</b>`;
  const card=(t,b)=>`<div class='k' style='margin-bottom:8px'><div class='l' style='margin-bottom:4px'>${t}</div>${b}</div>`;
  const row=(a,b,c)=>`<div class='row'><span class='nm'>${a}</span><span style='color:var(--mut)'>${b}</span><b style='min-width:46px;text-align:right'>${c}</b></div>`;
  const T=Object.values(d.teams).sort((a,b)=>names.indexOf(a.manager)-names.indexOf(b.manager));
- const rk=n=>['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'][n]||(n+1)+'.';
  let h=`<div class='sub' style='margin-top:8px'>Up to GW${d.gw} \u00b7 updated ${esc(d._updated)}. Points are counted as FPL counts them (captain doubled, bench excluded).</div>`;
- h+=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>`<div class='row' style='flex-wrap:wrap'><span class='nm'>${i+1}. ${esc(p.n)}</span><span style='color:var(--mut)'>${p.starts} starts \u00b7 C\u00d7${p.caps}</span><b style='min-width:54px;text-align:right'>${p.pts} pts</b>${p.caps?`<span style='flex-basis:100%;font-size:11.5px;color:var(--mut);padding-left:18px'>${p.capPts} pts (${Math.round(p.capPts/p.pts*100)}%) came from the captain double</span>`:''}</div>`).join(''))).join('')+`<div class='sub'>C\u00d7 = times captained.</div>`;
+ h+=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>row(`${i+1}. ${esc(p.n)}`,`${p.starts} starts \u00b7 C\u00d7${p.caps}`,p.pts+' pts')).join(''))).join('')+`<div class='sub'>C\u00d7 = times captained.</div>`;
  const cs=T.slice().sort((a,b)=>b.cap.total-a.cap.total);
- h+=`<h2>Captaincy</h2><div class='sub' style='margin-bottom:6px'>Ranked by total captain points (doubled).</div>`+cs.map((t,i)=>card(`${rk(i)} ${nm(t.manager)} \u00b7 <b>${t.cap.total}</b> captain pts (+${t.cap.gain} from the double)`,
-  (t.cap.best?row('\ud83d\udc4d Best pick',`GW${t.cap.best.gw} ${esc(t.cap.best.n)}`,t.cap.best.raw+' pts')+row('\ud83d\udc4e Worst pick',`GW${t.cap.worst.gw} ${esc(t.cap.worst.n)}`,t.cap.worst.raw+' pts'):'')+
-  row('\ud83c\udfaf Missed captain points',`top scorer not captained ${t.cap.missed_weeks} of ${t.cap.weeks} wks`,t.cap.missed?'\u2212'+t.cap.missed:'0'))).join('');
+ h+=`<h2>Captaincy</h2><div class='sub' style='margin-bottom:6px'>Ranked by total captain points.</div>`+cs.map((t,i)=>card(`${RK(i)} ${nm(t.manager)} \u00b7 <b>${t.cap.total}</b> pts`,
+  (t.cap.best?row('\ud83d\udc4d Best',`GW${t.cap.best.gw} ${esc(t.cap.best.n)}`,t.cap.best.raw+' pts')+row('\ud83d\udc4e Worst',`GW${t.cap.worst.gw} ${esc(t.cap.worst.n)}`,t.cap.worst.raw+' pts'):'')+
+  row('\ud83c\udfaf Missed',`top scorer not captained ${t.cap.missed_weeks}/${t.cap.weeks} wks`,t.cap.missed?'\u2212'+t.cap.missed:'0'))).join('');
  const bs=T.slice().sort((a,b)=>a.bench.lost-b.bench.lost);
  h+=`<h2>Bench regrets</h2>`+card('Biggest scores left on the bench',d.regrets.map(r=>row(nm(r.mgr),`GW${r.gw} ${esc(r.n)}`,r.raw+' pts')).join(''))+
   card('Points lost by not starting the optimal XI',bs.map((t,i)=>row(`${i+1}. ${nm(t.manager)}`,`${t.bench.perfect} perfect wks${t.bench.worst.lost?' \u00b7 worst GW'+t.bench.worst.gw+' (\u2212'+t.bench.worst.lost+')':''}`,t.bench.lost?'\u2212'+t.bench.lost:'0')).join('')+`<div class='l' style='margin-top:6px'>Best valid XI each week under FPL formation rules, before captaincy. Bench Boost weeks count as perfect.</div>`);
- const tx=x=>row(nm(x.mgr),`GW${x.gw}: ${esc(x.in)} in, ${esc(x.out)} out`,(x.net>0?'+':x.net<0?'\u2212':'')+Math.abs(x.net));
- h+=`<h2>Transfers</h2>`+card('Best moves (points gained vs the player sold)',d.best_tx.map(tx).join(''))+card('Worst moves',d.worst_tx.map(tx).join(''));
+ const TX=d.tx||[],ic=(a,b)=>a===null||b===null?'\u23f3':a>b?'\u2705':a<b?'\u274c':'\u2796';
+ const cnt=(m,x,y)=>{const r=m.filter(z=>z[x]!==null);return {n:r.length,w:r.filter(z=>z[x]>z[y]).length,e:r.filter(z=>z[x]===z[y]).length}};
+ const pc=o=>o.n?Math.round(o.w/o.n*100)+'%':'\u2014';
+ const S=T.map(t=>{const m=TX.filter(x=>x.mgr===t.manager);return {t,a:cnt(m,'a1','b1'),b:cnt(m,'a3','b3')}}).sort((x,y)=>(y.a.n?y.a.w/y.a.n:-1)-(x.a.n?x.a.w/x.a.n:-1));
+ h+=`<h2>Transfers</h2>`+card('Did the player brought in outscore the one sold?',S.map((s,i)=>`<div class='row' style='flex-wrap:wrap'><span class='nm'>${i+1}. ${nm(s.t.manager)}</span><span style='color:var(--mut)'>Next GW <b>${pc(s.a)}</b></span><span style='color:var(--mut)'>Next 3 GWs <b>${pc(s.b)}</b></span><span style='flex-basis:100%;font-size:11.5px;color:var(--mut);padding-left:18px'>${s.a.w} of ${s.a.n} moves beat the player sold next GW (${s.a.e} level) \u00b7 ${s.b.w} of ${s.b.n} over 3 GWs (${s.b.e} level)</span></div>`).join(''))+
+  card('Latest moves',TX.slice(0,8).map(x=>`<div class='row' style='flex-wrap:wrap'><span class='nm'>${nm(x.mgr)} \u00b7 GW${x.gw}</span><span>${ic(x.a1,x.b1)} next GW</span><span>${ic(x.a3,x.b3)} 3 GWs</span><span style='flex-basis:100%;font-size:11.5px;color:var(--mut)'>${esc(x.in)} in (${x.a1}${x.a3!==null?' / '+x.a3:''}) \u00b7 ${esc(x.out)} out (${x.b1}${x.b3!==null?' / '+x.b3:''})</span></div>`).join('')+`<div class='l' style='margin-top:6px'>Points in brackets: next GW / next 3 GWs. \u2705 new player scored more, \u2796 level, \u274c scored less, \u23f3 not enough weeks yet.</div>`)+
+  `<div class='sub'>Next GW is the first week the new player is in the squad; next 3 GWs is that week plus the two after. Wildcard and Free Hit moves are left out.</div>`;
  if(d.mismatch_weeks)h+=`<div class='sub'>Note: in ${d.mismatch_weeks} team-weeks the total differs from FPL's official score (usually auto-subs or captain swaps).</div>`;
  $('#pls').innerHTML=h}
 function hof(){
@@ -314,6 +352,7 @@ document.addEventListener("click",e=>{const g=e.target.closest("[data-i]");if(!g
 const REAL={"the best team":{manager:"Rich Walker",gws:[[53,0,7],[164,0,11],[217,0,17],[310,0,0],[348,0,16],[416,0,11],[486,0,5],[526,0,11],[589,0,14]],chips:[["bboost",4]]},"Temp Name":{manager:"Lee Denny",gws:[[49,0,9],[152,0,0],[201,4,9],[292,0,1],[345,0,0],[415,0,7],[477,0,3],[521,0,0],[585,4,6]],chips:[["3xc",3],["wildcard",4]]},"chris team":{manager:"Chris Harrison",gws:[[43,0,10],[104,0,20],[151,4,5],[233,0,23],[297,0,8],[364,0,10],[436,8,9],[496,0,8],[552,0,21]],chips:[["3xc",7]]},"Madjo Moments":{manager:"Richard Harper",gws:[[66,0,1],[170,0,2],[218,4,6],[288,0,1],[319,4,12],[365,0,17],[435,4,9],[483,0,5],[525,0,21]],chips:[["3xc",3],["wildcard",6]]}};const EXTRA={"the best team":[[0,1000,0,3482299],[0,1001,0,783760],[0,1003,0,801253],[2,1002,13,383187],[1,1006,27,820524],[1,1008,25,826456],[2,1015,48,797632],[1,1020,46,1048336],[1,1017,54,814989]],"Temp Name":[[0,1000,0,4673927],[0,1001,0,1769269],[3,1005,2,2279669],[0,1010,3,1145917],[0,1015,3,962007],[2,1017,4,877260],[0,1022,4,1125362],[1,1027,2,1239252],[3,1024,14,940220]],"chris team":[[0,1000,0,6382778],[0,1000,0,7692095],[3,1001,3,7843570],[0,999,3,6273901],[2,1002,5,4793406],[1,1004,9,4122319],[3,1010,15,3404399],[0,1015,15,2542464],[0,1021,15,2288670]],"Madjo Moments":[[0,1000,0,893714],[1,1002,4,513658],[2,1004,1,797556],[0,1007,1,1389301],[3,1008,1,2797726],[0,1009,3,4045469],[2,1012,2,3465982],[1,1015,38,3341551],[1,1019,25,3773464]]};
 Object.keys(EXTRA).forEach(k=>REAL[k].gws.forEach((r,i)=>{r[3]=EXTRA[k][i][0];r[4]=EXTRA[k][i][1];r[5]=EXTRA[k][i][2];r[6]=EXTRA[k][i][3]}));
 load(REAL);hof();
+fetch('player_stats.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{PS=d;renderPlayers(d);renderChips(d,lastCur>=0?lastCur:G-1)}).catch(()=>{const m="<div class='sub' style='margin-top:10px'>Appears after the next nightly update has run.</div>";$('#pls').innerHTML=m;$('#ce').innerHTML=m});
 const ORDER=['Rich Walker','Lee Denny','Chris Harrison','Richard Harper'];
 fetch('data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
  const up=d._updated;delete d._updated;
