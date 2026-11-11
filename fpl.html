@@ -269,7 +269,7 @@ function renderPlayers(d){
  const row=(a,b,c)=>`<div class='row'><span class='nm'>${a}</span><span style='color:var(--mut)'>${b}</span><b style='min-width:46px;text-align:right'>${c}</b></div>`;
  const T=Object.values(d.teams).sort((a,b)=>names.indexOf(a.manager)-names.indexOf(b.manager));
  let h=`<div class='sub' style='margin-top:8px'>Up to GW${d.gw} \u00b7 updated ${esc(d._updated)}. Points are counted as FPL counts them (captain doubled, bench excluded).</div>`;
- h+=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>row(`${i+1}. ${esc(p.n)}`,`${p.starts} starts \u00b7 C\u00d7${p.caps}`,p.pts+' pts')).join(''))).join('')+`<div class='sub'>C\u00d7 = times captained.</div>`;
+ const TS=`<h2>Top scorers by team</h2>`+T.map(t=>card(nm(t.manager),t.top.map((p,i)=>row(`${i+1}. ${esc(p.n)}`,`${p.starts} starts \u00b7 C\u00d7${p.caps}`,p.pts+' pts')).join(''))).join('')+`<div class='sub'>C\u00d7 = times captained.</div>`;
  const cs=T.slice().sort((a,b)=>b.cap.total-a.cap.total);
  h+=`<h2>Captaincy</h2><div class='sub' style='margin-bottom:6px'>Ranked by total captain points.</div>`+cs.map((t,i)=>card(`${RK(i)} ${nm(t.manager)} \u00b7 <b>${t.cap.total}</b> pts`,
   (t.cap.best?row('\ud83d\udc4d Best',`GW${t.cap.best.gw} ${esc(t.cap.best.n)}`,t.cap.best.raw+' pts')+row('\ud83d\udc4e Worst',`GW${t.cap.worst.gw} ${esc(t.cap.worst.n)}`,t.cap.worst.raw+' pts'):'')+
@@ -293,6 +293,7 @@ function renderPlayers(d){
   card('\ud83d\udca9 Top 5 worst transfers',worst.map(mv).join('')+`<div class='l' style='margin-top:6px'>Same measure, lowest first.</div>`)+
   `<div class='sub'>Next GW is the first week the new player is in the squad; next 3 GWs is that week plus the two after. Wildcard and Free Hit moves are left out.</div>`;
 
+ h+=TS;
  if(d.mismatch_weeks)h+=`<div class='sub'>Note: in ${d.mismatch_weeks} team-weeks the total differs from FPL's official score (usually auto-subs or captain swaps).</div>`;
  $('#pls').innerHTML=h}
 function hof(){
