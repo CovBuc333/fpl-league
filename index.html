@@ -3,13 +3,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Is He Come</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2f6fed">
+<meta name="theme-color" content="#0d1611">
 <meta name="application-name" content="Is He Come">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Is He Come">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#fff;--fg:#1a1a1a;--mut:#6b6b6b;--card:#f3f3f6;--line:#dcdce2;--acc:#2f6fed;--acc2:#8b5cf6;--sh:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(0,0,0,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}}
@@ -26,6 +28,30 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:8px 0 4px;backgro
 .ds{color:var(--mut);font-size:13.5px}
 .go{margin-top:12px;font-weight:700;color:var(--acc);font-size:14px}
 .back{display:inline-block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--acc);text-decoration:none}
+
+/* ===== Matchday theme ===== */
+:root,:root[data-theme]{--bg:#0d1611;--fg:#eef3ee;--mut:#a3b8aa;--card:#15241b;--line:#2a3d31;--acc:#c6f432;--acc2:#c6f432;--ink:#0d1611;--up:#4ade80;--down:#f87171;--sh:none;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1611;--fg:#eef3ee;--mut:#a3b8aa;--card:#15241b;--line:#2a3d31;--acc:#c6f432}}
+body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:44px;line-height:.95;text-transform:uppercase;letter-spacing:0;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--fg)}
+h2{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;letter-spacing:.04em;color:var(--fg)}
+h2::before{display:none}
+.back{color:var(--acc)}
+.k,.r,details,.tile{box-shadow:none;border:1px solid var(--line);background:var(--card)}
+.k::before,.tile::before{display:none}
+.k .l{color:var(--mut)}
+.grid .k .l{text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:10.5px}
+.k .v{font-family:"Barlow Condensed",sans-serif;font-weight:800}
+svg.ch{background:var(--card);box-shadow:none;border:1px solid var(--line)}
+svg.ch polyline{filter:none}
+.ax{fill:var(--mut)}
+.pos{color:var(--up)}.neg{color:var(--down)}
+
+.tile{border-radius:14px}
+.ic{font-size:30px}
+.tt{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:28px;text-transform:uppercase;letter-spacing:.01em}
+.go{color:var(--acc);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.sub{color:var(--mut)}
 </style></head><body>
 <h1>Is He Come Hub</h1>
 <div class="sub">Pick a competition to see the stats.</div>

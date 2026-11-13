@@ -2,6 +2,8 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Accumulator challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#fff;--fg:#1a1a1a;--mut:#6b6b6b;--card:#f3f3f6;--line:#dcdce2;--acc:#2f6fed;--acc2:#8b5cf6;--sh:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(0,0,0,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}}
@@ -30,6 +32,27 @@ svg.ch{width:100%;height:auto;display:block;background:var(--card);border:1px so
 .open .hist{display:block}
 .open .chev{transform:rotate(180deg)}
 .pos{color:#2a9d4a}.neg{color:#d33}
+
+/* ===== Matchday theme ===== */
+:root,:root[data-theme]{--bg:#0d1611;--fg:#eef3ee;--mut:#a3b8aa;--card:#15241b;--line:#2a3d31;--acc:#c6f432;--acc2:#c6f432;--ink:#0d1611;--up:#4ade80;--down:#f87171;--sh:none;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1611;--fg:#eef3ee;--mut:#a3b8aa;--card:#15241b;--line:#2a3d31;--acc:#c6f432}}
+body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:44px;line-height:.95;text-transform:uppercase;letter-spacing:0;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--fg)}
+h2{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;letter-spacing:.04em;color:var(--fg)}
+h2::before{display:none}
+.back{color:var(--acc)}
+.k,.r,details,.tile{box-shadow:none;border:1px solid var(--line);background:var(--card)}
+.k::before,.tile::before{display:none}
+.k .l{color:var(--mut)}
+.grid .k .l{text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:10.5px}
+.k .v{font-family:"Barlow Condensed",sans-serif;font-weight:800}
+svg.ch{background:var(--card);box-shadow:none;border:1px solid var(--line)}
+svg.ch polyline{filter:none}
+.ax{fill:var(--mut)}
+.pos{color:var(--up)}.neg{color:var(--down)}
+
+.k .v{font-size:26px}
+.g3 .v{font-size:24px}
 </style></head><body>
 <a class="back" href="./">← Home</a>
 <h1>Accumulator challenge</h1>
@@ -51,6 +74,7 @@ svg.ch{width:100%;height:auto;display:block;background:var(--card);border:1px so
 <script>
 const SHEET='https://docs.google.com/spreadsheets/d/e/2PACX-1vTmd8NEu8an7vF7sNRfGf8lj3bp41AfffGl_fsBFJiZgSMIxhSrwa7E_6CiRInFKXWy8j6G3fcDyKg1/pub?gid=0&single=true&output=csv';
 const STAKE=2;
+const PC={'Rich Walker':'#e879f9','Lee Denny':'#38bdf8','Chris Harrison':'#fb923c','Richard Harper':'#34d399','Rich W':'#e879f9','Lee':'#38bdf8','Chris':'#fb923c','Rich H':'#34d399'};
 const PAL=['#3b82f6','#f59e0b','#a855f7','#14b8a6','#ec4899','#64748b'];
 document.addEventListener('click',e=>{const t=e.target.closest('[data-p]');if(t)t.classList.toggle('open')});
 const SNAP=`Name,Bet #,Selected Team,League,Selected Team (Home/Away),Odds,Result,,Bet,Total,,
@@ -109,7 +133,7 @@ function build(t){
 
 function render(t,src){
  const {picks,tot}=build(t);
- const names=[...new Set(picks.map(p=>p.n))],col=n=>PAL[names.indexOf(n)%PAL.length];
+ const names=[...new Set(picks.map(p=>p.n))],col=n=>PC[n]||PAL[names.indexOf(n)%PAL.length];
  const settled=p=>p.res=='won'||p.res=='lost';
  const rounds=[...new Set(picks.map(p=>p.b))].sort((a,b)=>a-b).map(b=>{
   const ps=picks.filter(p=>p.b==b),done=ps.every(settled),won=done&&ps.every(p=>p.res=='won');
@@ -122,7 +146,7 @@ function render(t,src){
 
  // overview
  const wins=set.filter(r=>r.won).length;
- const bw=sp.filter(p=>p.res=='won').length,tint=c<0?'#d33':'#2a9d4a';
+ const bw=sp.filter(p=>p.res=='won').length,tint=c<0?'#f87171':'#4ade80';
  const kc=(l,v,n)=>`<div class='k'><div class='l'>${l}</div><div class='v'>${v}</div><div class='n'>${n}</div></div>`;
  const pc=(x,y)=>y?Math.round(x/y*100)+'% success':'';
  $('#kpi').innerHTML=
@@ -139,7 +163,7 @@ function render(t,src){
  for(let j=0;j<=4;j++){const v=lo+(hi-lo)*j/4;h+=`<text x='${L-5}' y='${y(v)+3.5}' text-anchor='end' class='ax'>${v<0?'\u2212':''}\u00a3${Math.abs(v).toFixed(0)}</text><line x1='${L}' x2='${W-R}' y1='${y(v)}' y2='${y(v)}' stroke='var(--line)' stroke-width='.5'/>`}
  h+=`<line x1='${L}' x2='${W-R}' y1='${y(0)}' y2='${y(0)}' stroke='var(--mut)' stroke-width='1' stroke-dasharray='3 3'/>`;
  h+=`<polyline fill='none' stroke='var(--acc)' stroke-width='2.2' stroke-linejoin='round' points='${pts.map((v,i)=>x(i)+','+y(v)).join(' ')}'/>`;
- set.forEach((r,i)=>{h+=`<circle cx='${x(i+1)}' cy='${y(r.cum)}' r='4.5' fill='${r.won?'#2a9d4a':'#d33'}'/><text x='${x(i+1)}' y='${H-7}' text-anchor='middle' class='ax'>${r.b}</text>`});
+ set.forEach((r,i)=>{h+=`<circle cx='${x(i+1)}' cy='${y(r.cum)}' r='4.5' fill='${r.won?'#4ade80':'#f87171'}'/><text x='${x(i+1)}' y='${H-7}' text-anchor='middle' class='ax'>${r.b}</text>`});
  const ch=$('#pl');ch.setAttribute('viewBox',`0 0 ${W} ${H}`);ch.innerHTML=h;
 
  // players
