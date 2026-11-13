@@ -2,8 +2,6 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FPL League Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#fff;--fg:#1a1a1a;--mut:#6b6b6b;--card:#f3f3f6;--line:#dcdce2;--acc:#2f6fed;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15151a;--fg:#f0f0f2;--mut:#9a9aa5;--card:#22222a;--line:#34343e;--acc:#6b9bff;color-scheme:dark}}
@@ -88,42 +86,6 @@ svg.ch polyline{filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
 .nav button.tab{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 3px 8px rgba(0,0,0,.06);padding:9px 10px;margin:0;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .1s}
 .nav button.tab:active{transform:scale(.96)}
 .nav button.tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent;box-shadow:0 3px 10px color-mix(in srgb,var(--acc) 40%,transparent)}
-
-/* ===== Matchday theme ===== */
-:root,:root[data-theme]{--bg:#0d1611;--fg:#eef3ee;--mut:#a3b8aa;--card:#15241b;--line:#2a3d31;--acc:#c6f432;--acc2:#c6f432;--ink:#0d1611;--up:#4ade80;--down:#f87171;--sh:none;color-scheme:dark}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1611;--fg:#eef3ee;--mut:#a3b8aa;--card:#15241b;--line:#2a3d31;--acc:#c6f432}}
-body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-h1{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:44px;line-height:.95;text-transform:uppercase;letter-spacing:0;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--fg)}
-h2{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;letter-spacing:.04em;color:var(--fg)}
-h2::before{display:none}
-.back{color:var(--acc)}
-.k,.r,details,.tile{box-shadow:none;border:1px solid var(--line);background:var(--card)}
-.k::before,.tile::before{display:none}
-.k .l{color:var(--mut)}
-.grid .k .l{text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:10.5px}
-.k .v{font-family:"Barlow Condensed",sans-serif;font-weight:800}
-svg.ch{background:var(--card);box-shadow:none;border:1px solid var(--line)}
-svg.ch polyline{filter:none}
-.ax{fill:var(--mut)}
-.pos{color:var(--up)}.neg{color:var(--down)}
-
-button{background:var(--acc);color:var(--ink);box-shadow:none;border-radius:8px;font-weight:700}
-.ctl{background:color-mix(in srgb,var(--bg) 92%,transparent)}
-.gw{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:22px;background:var(--card);border:1px solid var(--line);border-radius:8px}
-#fcb{background:transparent;color:var(--acc);border:1px solid var(--acc)}
-.k .v{font-size:26px}
-#kpi .k .v{color:var(--acc);font-size:30px}
-.pt{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:28px}
-.lb{font-family:"Barlow Condensed",sans-serif;font-size:13px;font-weight:700}
-.r{border-radius:12px}
-#tb .r:first-child{border-color:var(--acc);background:#1a2c20}
-#tb .r:nth-child(n) .rk{background:transparent;color:var(--fg);font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:24px;width:22px}
-#tb .r:first-child .rk{color:var(--acc)}
-.b.u{background:var(--acc);color:var(--ink);border-color:var(--acc)}
-.b:not(.u){border:1px dashed #3b5545;color:var(--mut)}
-.nav button.tab{background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:8px;box-shadow:none;min-height:44px}
-.nav button.tab.on{background:var(--acc);color:var(--ink);border-color:var(--acc);box-shadow:none}
-#err{color:var(--down)}
 </style></head><body>
 <a class="back" href="./">← Home</a>
 <h1>Is he come conference league</h1>
@@ -169,8 +131,7 @@ const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[
 const CH={wildcard:"WC",freehit:"FH",bboost:"BB","3xc":"TC",manager:"AM"};
 let names=[],man=[],tot=[],cost=[],bench=[],chips=[],ranks=[],G=0,N=0,maxTot=0,maxSc=1,t=0,playing=false,prev=0,hl=-1,lastCur=-1;
 const sc=(i,k)=>tot[i][k]-(k?tot[i][k-1]:0);
-const PC={'Rich Walker':'#e879f9','Lee Denny':'#38bdf8','Chris Harrison':'#fb923c','Richard Harper':'#34d399','Rich W':'#e879f9','Lee':'#38bdf8','Chris':'#fb923c','Rich H':'#34d399'};
-const col=i=>PC[names[i]]||`hsl(${Math.round(i*360/N)},68%,60%)`;
+const col=i=>`hsl(${Math.round(i*360/N)},68%,52%)`;
 
 function sample(){let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
 const n=["Haaland Hopefuls","Salah Gang","Palmer Express","Saka Sauce","Son of a Gunner","Kane Train","Fantasy Fools","Captain Chaos","Bench Boost","Wildcard Wizards"];
@@ -272,10 +233,10 @@ function extra(cur){
  const to=idx.slice().sort((a,b)=>sm(trn,b)-sm(trn,a));
  $('#tr').innerHTML=`<div class='k'>`+to.map(i=>`<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><span>🔄 ${sm(trn,i)}</span><span style='width:112px;text-align:right'>${sm(cost,i)/4} hits · −${sm(cost,i)} pts</span></div>`).join('')+`<div class='l' style='margin-top:6px'>Transfers made, hits taken (4 pts each) and points lost. FPL shows no transfers in wildcard weeks.</div></div>`;
  const vl=idx.slice().sort((a,b)=>val[b][cur]-val[a][cur]);
- $('#sv').innerHTML=`<div class='k'>`+vl.map(i=>{const d=val[i][cur]-1000;return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>£${(val[i][cur]/10).toFixed(1)}m</b><span style='width:44px;text-align:right;color:${d>0?'#4ade80':d<0?'#f87171':'var(--mut)'}'>${d>0?'+':d<0?'−':''}${Math.abs(d/10).toFixed(1)}</span><span style='width:78px;text-align:right;color:var(--mut)'>bank £${(bnk[i][cur]/10).toFixed(1)}m</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Squad value, change since the £100.0m start, and money in the bank.</div></div>`;
+ $('#sv').innerHTML=`<div class='k'>`+vl.map(i=>{const d=val[i][cur]-1000;return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>£${(val[i][cur]/10).toFixed(1)}m</b><span style='width:44px;text-align:right;color:${d>0?'#2a9d4a':d<0?'#d33':'var(--mut)'}'>${d>0?'+':d<0?'−':''}${Math.abs(d/10).toFixed(1)}</span><span style='width:78px;text-align:right;color:var(--mut)'>bank £${(bnk[i][cur]/10).toFixed(1)}m</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Squad value, change since the £100.0m start, and money in the bank.</div></div>`;
  const wk=idx.slice().sort((a,b)=>orn[a][cur]-orn[b][cur]);
  const f2=n=>n>=1e6?(n/1e6).toFixed(2)+'m':Math.round(n/1e3)+'k';
- $('#wl2').innerHTML=orn[0][cur]?`<div class='k' style='margin-top:8px'>`+wk.map(i=>{const d=orn[i][Math.max(0,cur-5)]-orn[i][cur];return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>${f2(orn[i][cur])}</b><span style='width:84px;text-align:right;color:${d>0?'#4ade80':d<0?'#f87171':'var(--mut)'}'>${d>0?'▲':d<0?'▼':''} ${f2(Math.abs(d))}</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Overall FPL rank (lower is better) and movement over the last 5 GWs.</div></div>`:'';
+ $('#wl2').innerHTML=orn[0][cur]?`<div class='k' style='margin-top:8px'>`+wk.map(i=>{const d=orn[i][Math.max(0,cur-5)]-orn[i][cur];return `<div class='row'>${dot(i)}<span class='nm'>${nm(i)}</span><b>${f2(orn[i][cur])}</b><span style='width:84px;text-align:right;color:${d>0?'#2a9d4a':d<0?'#d33':'var(--mut)'}'>${d>0?'▲':d<0?'▼':''} ${f2(Math.abs(d))}</span></div>`}).join('')+`<div class='l' style='margin-top:6px'>Overall FPL rank (lower is better) and movement over the last 5 GWs.</div></div>`:'';
 }
 const PAST={'2020/21':[[2009,2533305],[1401,7003134],[2145,1321125],[1911,3481436]],'2021/22':[[2285,728418],[2204,1175578],[1940,3373740],[2330,536832]],'2022/23':[[2294,1593409],[2430,470558],[2407,605684],[2448,376727]],'2023/24':[[2117,3307767],[2306,985117],[2259,1458547],[2402,355497]],'2024/25':[[2308,1415961],[2401,564257],[2010,5391894],[1886,6656480]],'2025/26':[[2259,396795],[2069,2790418],[2038,3341463],[1882,6231127]]};
 var PS=null;
@@ -381,7 +342,7 @@ function stats(cur){
   card("🪑 Most points on bench",sum(bench,bn),names[bn])+
   card("💸 Most points lost to hits","−"+sum(cost,ht),names[ht]);
  $("#tb").innerHTML=by.map(i=>{
-  const bars=[];for(let k=Math.max(0,cur-4);k<=cur;k++)bars.push(`<i style="height:${Math.max(2,Math.round(sc(i,k)/maxSc*16))}px;background:${col(i)}"></i>`);
+  const bars=[];for(let k=Math.max(0,cur-4);k<=cur;k++)bars.push(`<i style="height:${Math.max(2,Math.round(sc(i,k)/maxSc*16))}px"></i>`);
   const used={};chips[i].forEach(c=>{if(c[1]-1<=cur&&(c[1]<=19)===(cur<19))used[c[0]]=c[1]});const cs=[["wildcard","WC"],["freehit","FH"],["bboost","BB"],["3xc","TC"]].map(([n,l])=>used[n]?`<span class="b u">${l} <small>GW${used[n]}</small></span>`:`<span class="b">${l}</span>`).join("");
   return `<div class="r" data-i="${i}" style="${hl>=0&&hl!==i?"opacity:.35":""}"><div class="r1"><span class="rk">${rk[i]+1}</span><span class="dot" style="background:${col(i)};margin:0"></span><span class="nm">${esc(names[i])}</span><span class="pt">${tot[i][cur]}</span></div><div class="r2"><span>Last 5: ${form(i)}<span class="bars">${bars.join("")}</span></span><span>Avg ${(tot[i][cur]/(cur+1)).toFixed(1)}</span><span>Hits ${sum(cost,i)?"−"+sum(cost,i):"0"}</span></div><div class="r3">${cs}</div></div>`}).join("")}
 
